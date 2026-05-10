@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-
+import GallerySlider from "@/components/GallerySlider";
 import { useTheme } from "@/app/providers/ThemeProvider";
 import { getTokens } from "@/app/theme/tokens";
 
@@ -133,45 +133,53 @@ export default function EventsPage() {
         {past.length === 0 ? (
           <div className={`mt-6 rounded-3xl border ${panel} p-6`}>
             <p className="font-black">No past events yet</p>
-            <p className={`mt-2 text-sm ${softText}`}>Add past events in <code>src/features/events/seed.ts</code>.</p>
-          </div>
+        </div>
         ) : (
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {past.map((e) => (
+            {past.map((e) => {
+               const galleryImages: string[] =
+                Array.isArray(e.gallery) && e.gallery.length > 0
+                  ? e.gallery
+                  : e.image
+                  ? [e.image]
+                  : [];
+
+              
+             return (
+              
               <a
                 key={e.id}
-                href={e.link || "#"}
+                
                 target="_blank"
                 rel="noreferrer"
                 className="group relative overflow-hidden rounded-3xl border border-white/10 bg-black"
               >
-                {/* image */}
-                {e.image ? (
-  <img
-    src={e.image}
-    alt={e.title}
-    className="h-52 w-full object-cover opacity-95 transition-transform duration-500 group-hover:scale-105"
-  />
-) : (
-  <div className="h-52 w-full bg-gradient-to-br from-violet-800/40 via-fuchsia-700/20 to-black" />
-)}
+ {galleryImages.length > 0 ? (
+                    <GallerySlider images={galleryImages} title={e.title} />
+                  ) : (
+                    <>
+                      <div className="h-52 w-full bg-gradient-to-br from-violet-800/40 via-fuchsia-700/20 to-black" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                    </>
+                  )}
 
-<div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                  {/* Text overlay — sits on top of the slider's gradient */}
+                  <div className="absolute bottom-0 left-0 right-0 p-5">
+                    <p className="text-sm font-black text-white">{e.title}</p>
+                    <p className="mt-1 text-[10px] font-black uppercase tracking-[0.22em] text-violet-200">
+                      {e.date} • {e.location}
+                    </p>
+                  </div>
 
-                <div className="absolute bottom-0 left-0 right-0 p-5">
-                  <p className="text-sm font-black text-white">{e.title}</p>
-                  <p className="mt-1 text-[10px] font-black uppercase tracking-[0.22em] text-violet-200">
-                    {e.date} • {e.location}
-                  </p>
-                </div>
-
-                {e.link && (
-                  <span className="absolute right-3 top-3 rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-black">
-                    Watch
-                  </span>
-                )}
-              </a>
-            ))}
+                  {/* Watch badge */}
+                  {e.link && (
+                    <span className="absolute right-3 top-3 z-10 rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-black">
+                      Watch
+                    </span>
+                  )}
+                </a>
+              );
+            })}
           </div>
         )}
       </section>

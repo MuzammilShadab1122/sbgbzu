@@ -340,7 +340,7 @@ export default function HomePage() {
       tilt={-14}
     />
               {/* STAR */}
-              <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+              <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4" >
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] font-black uppercase tracking-[0.26em] text-amber-200">
                     ★ Star of the month
@@ -423,9 +423,6 @@ export default function HomePage() {
                 ) : (
                   <div className="mt-3 rounded-xl border border-white/10 bg-black/20 p-3">
                     <p className="text-sm font-bold text-white">Not announced yet</p>
-                    <p className={`mt-1 text-xs ${softText}`}>
-                      Set <code>monthlyGrinders</code> in highlights.ts
-                    </p>
                   </div>
                 )}
               </div>
@@ -464,6 +461,13 @@ export default function HomePage() {
               </div>
             ))}
           </div>
+               <Sticker
+      isDark={isDark}
+      src="/images/stickers/hero.jpeg"
+      className="left-90 bottom-4 h-70 w-70 opacity-0"
+      floatDelay={0.05}
+      tilt={-4}
+    />
         </div>
       </section>
 

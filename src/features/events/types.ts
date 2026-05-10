@@ -7,4 +7,5 @@ export type EventItem = {
   location: string;
   link?: string;
   image?: string;
+  gallery?: string[];
 };

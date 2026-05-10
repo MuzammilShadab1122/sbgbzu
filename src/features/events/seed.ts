@@ -9,7 +9,13 @@ export const events: EventItem[] = [
     location: "Online (Google Meet)",
     description:
       "Introduction to the chapter, program structure, points system, and how teams will operate.",
-    image: "/images/firstevent.jpeg",
+     gallery:[
+      "/images/firstevent/1.jpeg",
+      "/images/firstevent/2.jpeg",
+      "/images/firstevent/3.jpeg",
+      "/images/firstevent/4.jpeg",
+      "/images/firstevent/5.jpeg",
+      ]
   },
   {
     id: 202,
@@ -19,8 +25,21 @@ export const events: EventItem[] = [
     location: "BZU Campus",
     description:
       "Physical onboarding: member introductions, team allocation, roadmap, and first community tasks.",
-   
-    link: "", 
+   gallery:[
+      "/images/onboarding/1.jpeg",
+      "/images/onboarding/2.jpeg",
+      "/images/onboarding/3.jpeg",
+      "/images/onboarding/4.jpeg",
+      "/images/onboarding/5.jpeg",
+      "/images/onboarding/6.jpeg",
+      "/images/onboarding/7.jpeg",
+      "/images/onboarding/8.jpeg",
+      "/images/onboarding/9.jpeg",
+      "/images/onboarding/10.jpeg",
+      "/images/onboarding/11.jpeg",
+      "/images/onboarding/12.jpeg",
+      "/images/onboarding/13.jpeg",
+   ]
   },
   {
     id: 101,
