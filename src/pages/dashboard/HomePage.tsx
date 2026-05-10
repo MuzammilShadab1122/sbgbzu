@@ -369,9 +369,6 @@ export default function HomePage() {
                 ) : (
                   <div className="mt-3 rounded-xl border border-white/10 bg-black/20 p-3">
                     <p className="text-sm font-bold text-white">Not announced yet</p>
-                    <p className={`mt-1 text-xs ${softText}`}>
-                      Set <code>starOfMonthId</code> in highlights.ts
-                    </p>
                   </div>
                 )}
               </div>
@@ -439,37 +436,154 @@ export default function HomePage() {
       </section>
 
       {/* Vision / Mission */}
-      <section className={`border-t ${lineColor} px-6 py-24 lg:px-8`}>
-        <div className="mx-auto grid max-w-7xl gap-14 lg:grid-cols-2">
-          <SectionLabel
-            eyebrow="Our vision and mission"
-            title="Build cloud skills that turn student ideas into deployed products"
-            copy="Bringing cloud and tech opportunites to Multan. Our group helps students learn AWS, collaborate across campuses, ship practical portfolios, and grow into cloud-ready engineers."
-            mutedText={mutedText}
-          />
-          <div className="grid gap-6 sm:grid-cols-2">
-            {[
-              ["01", "Hands-on AWS labs", "Guided labs around compute, storage, serverless APIs, identity, and deployment workflows."],
-              ["02", "Portfolio-first learning", "Every workshop should lead to a project, GitHub commit, demo, or published case study."],
-              ["03", "Community leadership", "Members grow by mentoring juniors, hosting sessions, and supporting campus events."],
-              ["04", "Career readiness", "The platform highlights skills, points, projects, and contributions for internships and roles."],
-            ].map(([n, t, c]) => (
-              <div key={n} className="border-t border-violet-400/60 pt-5">
-                <p className="text-sm font-black text-violet-400">{n}</p>
-                <h3 className="mt-3 text-xl font-black tracking-[-0.04em]">{t}</h3>
-                <p className={`mt-3 text-sm leading-6 ${mutedText}`}>{c}</p>
-              </div>
-            ))}
+   {/* Vision / Mission - Enhanced */}
+<section
+  className={`relative border-t ${lineColor} overflow-hidden px-6 py-24 lg:px-8 lg:py-32`}
+  aria-labelledby="vision-mission-heading"
+>
+  {/* Layered background */}
+  <div className="absolute inset-0 bg-gradient-to-br from-violet-500/40 via-black to-violet-500/40 dark:from-slate-900/95 via-slate-900/90 dark:to-violet-950/80" />
+  
+  {/* Animated gradient orbs */}
+  <div className="absolute -right-32 -top-32 h-96 w-96 rounded-full bg-gradient-to-br from-violet-300/40 to-fuchsia-300/30 blur-3xl dark:from-violet-700/20 dark:to-fuchsia-700/15 animate-pulse pointer-events-none" />
+  <div className="absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-gradient-to-br from-fuchsia-300/40 to-violet-300/30 blur-3xl dark:from-fuchsia-700/20 dark:to-violet-700/15 animate-pulse pointer-events-none" style={{ animationDelay: '1s' }} />
+
+  {/* Subtle grid pattern */}
+  <div 
+    className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]"
+    style={{
+      backgroundImage: 'radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)',
+      backgroundSize: '40px 40px'
+    }}
+  />
+
+  <div className="relative z-10 mx-auto max-w-7xl">
+    {/* Section Header */}
+    <div className="mb-16 text-center lg:mb-20">
+      <div className="mb-6 inline-flex items-center gap-3">
+        <div className="h-px w-12 bg-gradient-to-r from-transparent to-violet-500 dark:from-transparent dark:to-violet-500" />
+        <span className="text-[11px] font-black uppercase bg-violet-100 rounded-full px-3 py-1 text-violet-600 dark:bg-violet-900/40 dark:text-violet-400">
+                      <h2 className="text-xl bg-violet-100 rounded-full px-2 py-1 font-black text-violet-600 dark:text-white">Our Vision</h2>
+        </span>
+        <div className="h-px w-12 bg-gradient-to-l from-transparent to-violet-500 dark:from-transparent dark:to-violet-500" />
+      </div>
+
+      <h2
+        id="vision-mission-heading"
+        className="mx-auto max-w-4xl text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl dark:text-white"
+      >
+        BZU's first student cloud builder community in Multan
+      </h2>
+      
+      <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-white dark:text-slate-300">
+        Turning student ideas into deployed AWS products — right here in our city, for the first time ever.
+      </p>
+    </div>
+
+    {/* Main Content Grid */}
+    <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
+      <div className="space-y-8">
+        {/* Mission Statement Card */}
+        <div className="rounded-2xl border border-violet-200/60 bg-white/[0.03] p-8 shadow-xl shadow-violet-500/5 backdrop-blur-sm dark:border-violet-700/30 dark:bg-slate-800/40 dark:shadow-violet-900/20">
+          <div className="mb-4 flex items-center gap-3">
+                  <div className="h-px w-12 bg-gradient-to-l from-transparent to-violet-500 dark:from-transparent dark:to-violet-500" />
+            <h3 className="text-xl bg-violet-100 rounded-full px-2 py-1 font-black text-violet-600 dark:text-white">Our Mission</h3>
+                  <div className="h-px w-12 bg-gradient-to-l from-transparent to-violet-500 dark:from-transparent dark:to-violet-500" />
+    
           </div>
-               <Sticker
-      isDark={isDark}
-      src="/images/stickers/hero.jpeg"
-      className="left-90 bottom-4 h-70 w-70 opacity-0"
-      floatDelay={0.05}
-      tilt={-4}
-    />
+          
+          <p className="text-base leading-7 text-white dark:text-white">
+            We're a <strong className="text-violet-300 dark:text-white">Bahauddin Zakariya University (BZU)</strong> student-led builder group
+            a<span className="inline-flex items-center gap-1-full px-2 py-1 text-sm font-bold text-violet-300 dark:bg-violet-300 dark:text-violet-300">
+            First in Multan
+            </span>created to bring real cloud and AWS learning opportunities directly to students in our city.
+          </p>
+
+          <p className="mt-4 text-base leading-7 text-white dark:text-white">
+            We help students <strong className="text-violet-300 dark:text-white">master AWS services</strong> (EC2, S3, Lambda, IAM, CloudFormation, Amplify, CDK, and more), 
+            collaborate across departments and campuses, and ship <strong className="text-violet-300 dark:text-white">production-grade portfolio projects</strong> — 
+            not just tutorials.
+          </p>
         </div>
-      </section>
+
+        {/* CTA Buttons */}
+        <div className="flex flex-wrap gap-4 pt-4">
+          <a
+            href="#team"
+            className="group inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-7 py-3.5 font-bold text-white shadow-lg shadow-violet-600/30 transition hover:shadow-xl hover:shadow-violet-600/40 hover:from-violet-700 hover:to-fuchsia-700"
+          >
+           View Our Team
+            <svg className="h-4 w-4 transition group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </a>
+        </div>
+      </div>
+
+      {/* RIGHT: Visual Element */}
+      <div className="flex items-center justify-center lg:justify-end">
+        <div className="relative">
+          {/* Background decorative elements */}
+          <div className="absolute -inset-8 rounded-full bg-gradient-to-br from-violet-200/40 to-fuchsia-200/40 blur-2xl dark:from-violet-800/20 dark:to-fuchsia-800/20" />
+          
+          {/* Main image container */}
+          <div className="relative">
+            {/* Rotating border */}
+            <div className="absolute -inset-3 rounded-full border-2 border-dashed border-violet-300/50 dark:border-violet-600/30 animate-[spin_30s_linear_infinite]" />
+            <div className="absolute -inset-6 rounded-full border border-violet-200/30 dark:border-violet-700/20" />
+            
+            {/* Image */}
+            <img
+              src="/images/AWS-MembersPics/Mehdi Hassan.jpeg"
+              alt="Mehdi Hassan, leader of AWS Student Builder Group BZU - first student AWS community in Multan"
+              className="relative h-72 w-72 rounded-full border-4 border-violet-200 object-cover shadow-2xl sm:h-80 sm:w-80 lg:h-96 lg:w-96 dark:border-violet-700"
+            />
+            
+            {/* Floating badges */}
+            <div className="absolute -right-4 top-8 rounded-full bg-white px-4 py-2 text-xs font-black text-violet-700 shadow-xl dark:bg-slate-800 dark:text-violet-300">
+              <div className="flex items-center gap-2">
+                <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                BZU Multan
+              </div>
+            </div>
+
+            <Sticker  isDark={isDark}
+      src="/images/stickers/cloud.png"
+      className="-left-9 top-15 h-24 w-24 opacity-20"
+      floatDelay={0.05}
+      tilt={-6}
+    />
+         
+            <div className="absolute -bottom-4 -left-4 rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-600 px-4 py-2 text-xs font-black text-white shadow-lg">
+              <div className="flex items-center gap-2">
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Leader
+              </div>
+            </div>
+          </div>
+
+          {/* Stats cards floating */}
+         
+<Sticker  isDark={isDark}
+      src="/images/stickers/aws.png"
+      className="-left-9 bottom-15 h-24 w-24 opacity-20"
+      floatDelay={0.05}
+      tilt={-6}
+    />
+          <div className="absolute -right-12 top-24 rounded-xl border border-fuchsia-200/60 bg-white/90 px-4 py-3 shadow-lg backdrop-blur-sm dark:border-fuchsia-700/30 dark:bg-slate-800/90">
+            <p className="text-2xl font-black text-fuchsia-700 dark:text-fuchsia-300">1st</p>
+            <p className="text-xs font-bold text-slate-600 dark:text-slate-400">In Multan</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
 
       {/* Latest notices */}
       <section className={`border-t ${lineColor} px-6 py-24 lg:px-8`}>

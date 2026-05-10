@@ -95,7 +95,7 @@ export default function DashboardLayout() {
               </button>
             )}
 
-            <button
+            {/* <button
               onClick={toggle}
               className={`rounded-full border px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] transition ${
                 isDark
@@ -104,7 +104,7 @@ export default function DashboardLayout() {
               }`}
             >
               {isDark ? "Light" : "Dark"}
-            </button>
+            </button> */}
           </div>
         </div>
       </header>
