@@ -4,7 +4,6 @@ import { fmt } from "@/lib/format";
 
 export default function MemberModal({
   member,
-  rank,
   canAdmin,
   isDark,
   starOfMonth,
@@ -13,7 +12,6 @@ export default function MemberModal({
   onMakeStar,
 }: {
   member: Participant | null;
-  rank: number;
   canAdmin: boolean;
   isDark: boolean;
   starOfMonth: number;
@@ -72,14 +70,12 @@ export default function MemberModal({
 
             <div className="space-y-3">
               {[
-                ["Rank", `#${rank}`],
                 ["Points", fmt(member.points)],
-                ["Responsibilities", member.responsibilities || "—"],
-                ["Campus", member.campus || "—"],
+                ["Responsibility", member.responsibilities || "—"],
               ].map(([label, value]) => (
-                <div key={label} className="flex justify-between gap-6 border-b border-violet-400/15 pb-3">
+                <div key={label} className="flex flex-col justify-between gap-6 border-b border-violet-400/15 pb-3">
                   <span className="text-xs font-black uppercase tracking-[0.2em] text-violet-400">{label}</span>
-                  <span className="text-right text-sm font-bold">{value}</span>
+                  <span className="text-right text-sm font-medium">{value}</span>
                 </div>
               ))}
             </div>

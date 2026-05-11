@@ -192,7 +192,7 @@ export default function HomePage() {
   }, [participants]);
 
   const totalPoints = participants.reduce((s, p) => s + p.points, 0);
-  const activeTracks = new Set(participants.map((p) => p.track)).size;
+  const activeTeams = new Set(participants.map((p) => p.team)).size;
 
   const statRows = [
     {
@@ -231,10 +231,10 @@ export default function HomePage() {
       color: "from-violet-300 to-purple-600",
     },
     {
-      label: "Active tracks",
-      value: activeTracks,
+      label: "Active teams",
+      value: activeTeams,
       max: 200,
-      display: `${activeTracks}`,
+      display: `${activeTeams}`,
       color: "from-indigo-400 to-fuchsia-500",
     },
   ];
@@ -247,186 +247,115 @@ export default function HomePage() {
   return (
     <>
       {/* HERO (compact) */}
-      <section className="relative overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{
-            backgroundImage:
-              "linear-gradient(105deg,rgba(5,3,10,0.96) 0%,rgba(21,8,38,0.88) 52%,rgba(5,3,10,0.35) 100%),url('/images/aws-student-builders-hero.png')",
-          }}
-        />
+    <section className="relative w-full overflow-x-hidden"> 
+  {/* BACKGROUND LAYER */}
+  <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `linear-gradient(105deg,rgba(5,3,10,0.96) 0%,rgba(21,8,38,0.88) 52%,rgba(5,3,10,0.35) 100%), url('/images/aws-student-builders-hero.png')` }} /> 
+  
+  {/* ANIMATED BLOBS - Scaled down for mobile to prevent layout shift */}
+  <motion.div aria-hidden animate={{ opacity: [0.16, 0.34, 0.16], scale: [1, 1.05, 1] }} transition={{ duration: 8, repeat: Infinity }} className="absolute -left-20 top-10 h-64 w-64 rounded-full bg-violet-700/30 blur-3xl pointer-events-none md:-left-40 md:h-[26rem] md:w-[26rem]" /> 
+  <motion.div aria-hidden animate={{ y: [0, -14, 0], opacity: [0.12, 0.28, 0.12] }} transition={{ duration: 7, repeat: Infinity }} className="absolute bottom-10 right-0 h-60 w-60 rounded-full bg-fuchsia-500/20 blur-3xl pointer-events-none md:h-80 md:w-80" /> 
 
-        <motion.div
-          aria-hidden
-          animate={{ opacity: [0.16, 0.34, 0.16], scale: [1, 1.05, 1] }}
-          transition={{ duration: 8, repeat: Infinity }}
-          className="absolute -left-40 top-10 h-[26rem] w-[26rem] rounded-full bg-violet-700/30 blur-3xl pointer-events-none"
-        />
-        <motion.div
-          aria-hidden
-          animate={{ y: [0, -14, 0], opacity: [0.12, 0.28, 0.12] }}
-          transition={{ duration: 7, repeat: Infinity }}
-          className="absolute bottom-10 right-0 h-80 w-80 rounded-full bg-fuchsia-500/20 blur-3xl pointer-events-none"
-        />
+  <div className="relative z-10 mx-auto w-full max-w-7xl px-5 py-10 lg:px-8 lg:py-16"> 
+    <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-[1.1fr_0.9fr]"> 
+      
+      {/* LEFT CONTENT */}
+      <div className="max-w-2xl text-left"> 
+        <div className="mb-4 flex flex-wrap items-center gap-2"> 
+          <span className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.22em] text-violet-200 sm:text-[10px]"> 
+            AWS Student Builder Group • BZU 
+          </span> 
+          <span className="rounded-full border border-violet-400/20 bg-violet-500/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.22em] text-violet-300 sm:text-[10px]"> 
+            Cloud • Community 
+          </span> 
+        </div> 
 
-        <div className="relative z-10 mx-auto w-full max-w-7xl px-6 py-14 lg:px-8 lg:py-16">
-          <div className="grid items-start gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10">
-            {/* LEFT */}
-            <div className="max-w-2xl">
-              <div className="mb-4 flex flex-wrap items-center gap-2">
-                <span className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.22em] text-violet-200">
-                  AWS Student Builder Group • BZU
-                </span>
-                <span className="rounded-full border border-violet-400/20 bg-violet-500/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.22em] text-violet-300">
-                  Cloud • Community • Portfolio
-                </span>
-              </div>
+        <h1 
+          className="font-black leading-[1.1] tracking-[-0.05em] text-white" 
+          style={{ fontSize: "clamp(1.6rem, 8vw, 3.6rem)" }} // Lowered min-clamp for mobile
+        > 
+          Empowering innovation through the power of AWS. 
+        </h1> 
 
-              <h1
-                className="font-black leading-[1.02] tracking-[-0.06em] text-white"
-                style={{ fontSize: "clamp(2.1rem, 3.6vw, 3.6rem)" }}
-              >
-                Empowering innovation through the power of AWS.
-              </h1>
+        <p className="mt-4 max-w-xl text-sm leading-relaxed text-zinc-300 sm:text-base"> 
+          A student-led platform for team profiles, leaderboards, and collaboration portfolios. 
+        </p> 
 
-              <p className="mt-4 max-w-xl text-sm leading-7 text-zinc-200 sm:text-base">
-                A student-led platform for team profiles, points leaderboard, spotlights,
-                events, notices, and collaboration portfolios.
-              </p>
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row"> 
+          <button onClick={() => nav('/team')} className="w-full sm:w-auto rounded-full bg-white px-8 py-4 text-[11px] font-black uppercase tracking-[0.18em] text-[#13091f] transition hover:bg-violet-100"> 
+            View teams → 
+          </button> 
+          <button onClick={() => nav('/leaderboard')} className="w-full sm:w-auto rounded-full border border-white/20 bg-white/5 px-8 py-4 text-[11px] font-black uppercase tracking-[0.18em] text-white backdrop-blur transition hover:border-violet-300 hover:bg-violet-500/20"> 
+            Leaderboard → 
+          </button> 
+        </div> 
+      </div> 
 
-              <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-                <button
-                  onClick={() => nav("/team")}
-                  className="rounded-full bg-white px-6 py-3.5 text-[11px] font-black uppercase tracking-[0.18em] text-[#13091f] transition hover:bg-violet-100"
-                >
-                  View teams →
-                </button>
+      {/* HIGHLIGHTS PANEL */}
+<div className={`relative rounded-3xl border ${panel} p-5 backdrop-blur-2xl lg:p-7`}> 
+  <p className="text-[10px] font-black uppercase tracking-[0.28em] text-violet-300"> 
+    Highlights ({HIGHLIGHTS.monthLabel}) 
+  </p> 
 
-                <button
-                  onClick={() => nav("/leaderboard")}
-                  className="rounded-full border border-white/20 bg-white/5 px-6 py-3.5 text-[11px] font-black uppercase tracking-[0.18em] text-white backdrop-blur transition hover:border-violet-300 hover:bg-violet-500/20"
-                >
-                  Leaderboard →
-                </button>
+  <Sticker 
+    isDark={isDark} 
+    src="/images/stickers/aws.png" 
+    // On mobile: right-2. On desktop: -right-8.
+    className="absolute -top-4 right-2 h-16 w-16 opacity-30 sm:-right-8 sm:top-2 sm:h-24 sm:w-24" 
+    floatDelay={0.05} 
+    tilt={8} 
+  /> 
+  <Sticker 
+    isDark={isDark} 
+    src="/images/stickers/cloud.png" 
+    // On mobile: left-0. On desktop: -left-4.
+    className="absolute -top-6 left-0 h-16 w-16 opacity-40 sm:-left-4 sm:top-1 sm:h-24 sm:w-24" 
+    floatDelay={0.18} 
+    tilt={-14} 
+  /> 
+    {/* STAR OF THE MONTH */}
+        <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.03] p-4 transition hover:bg-white/[0.05]"> 
+          <span className="text-[10px] font-black uppercase tracking-[0.26em] text-amber-200"> ★ Star of the month </span> 
+          {starMember ? ( 
+            <button onClick={() => setSelectedMember(starMember)} className="mt-4 flex w-full items-center gap-4 text-left"> 
+              <img src={starMember.image || '/images/AWS-MembersPics/default.png'} alt={starMember.name} className="h-12 w-12 rounded-xl object-cover ring-2 ring-violet-500/20" /> 
+              <div className="min-w-0 flex-1"> 
+                <p className="truncate text-sm font-black text-white">{starMember.name}</p> 
+                <p className="truncate text-xs text-zinc-400">{starMember.role}</p> 
+              </div> 
+              <div className="text-right"> 
+                <p className="text-lg font-black text-white">{fmt(starMember.points)}</p> 
+                <p className="text-[9px] font-black uppercase text-violet-300/80">pts</p> 
+              </div> 
+            </button> 
+          ) : ( 
+            <p className="mt-3 text-sm font-medium text-zinc-500 italic">Not announced yet</p> 
+          )} 
+        </div> 
 
-                {canAdmin && (
-                  <button
-                    onClick={() => nav("/admin")}
-                    className="rounded-full border border-violet-400/30 bg-violet-500/10 px-6 py-3.5 text-[11px] font-black uppercase tracking-[0.18em] text-violet-200 transition hover:bg-violet-500/20"
-                  >
-                    Admin →
-                  </button>
-                )}
-              </div>
-            </div>
+        {/* GRINDERS LIST */}
+        <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4"> 
+          <div className="flex items-center justify-between"> 
+            <p className="text-[10px] font-black uppercase tracking-[0.26em] text-violet-200"> 🏆 Monthly grinders </p> 
+            <button onClick={() => nav('/leaderboard')} className="text-[9px] font-bold uppercase text-white/60 hover:text-white transition"> View All </button>
+          </div> 
+          <div className="truncate mt-4 grid gap-2"> 
+            {grinderMembers.slice(0, 3).map((p, i) => ( 
+              <button key={p.id} onClick={() => setSelectedMember(p)} className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/[0.02] px-3 py-2 text-left hover:bg-white/[0.08] transition"> 
+                <span className="text-xs font-black text-violet-400/50 w-4"> {i + 1} </span> 
+                <img src={p.image || '/images/AWS-MembersPics/default.png'} className="h-8 w-8 rounded-full object-cover" alt="" /> 
+                <div className="min-w-0 flex-1"> 
+                  <p className="truncate text-[13px] font-bold text-white truncate">{p.name}</p> 
+                </div> 
+                <p className="text-xs font-black text-white">{fmt(p.points)}</p> 
+              </button> 
+            ))} 
+          </div> 
+        </div> 
+      </div> 
+    </div> 
+  </div> 
+</section>
 
-            {/*Highlights */}
-            <div className={`rounded-3xl border ${panel} p-5 backdrop-blur-2xl lg:p-6`}>
-              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-violet-300">
-                Highlights ({HIGHLIGHTS.monthLabel})
-              </p>
-                    <Sticker
-      isDark={isDark}
-      src="/images/stickers/aws.png"
-      className="-right-8 top-2 h-24 w-24 opacity-20"
-      floatDelay={0.05}
-      tilt={8}
-    />
-    <Sticker
-      isDark={isDark}
-      src="/images/stickers/cloud.png"
-      className="-left-1 top-1 h-24 w-24 opacity-55"
-      floatDelay={0.18}
-      tilt={-14}
-    />
-              {/* STAR */}
-              <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4" >
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-black uppercase tracking-[0.26em] text-amber-200">
-                    ★ Star of the month
-                  </span>
-                </div>
-
-                {starMember ? (
-                  <button
-                    onClick={() => setSelectedMember(starMember)}
-                    className="mt-3 flex w-full items-center gap-3 text-left"
-                  >
-                    <img
-                      src={starMember.image || "/images/AWS-MembersPics/default.png"}
-                      alt={starMember.name}
-                      className="h-12 w-12 rounded-2xl object-cover"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-black text-white">{starMember.name}</p>
-                      <p className="truncate text-xs text-zinc-300">{starMember.role}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-lg font-black text-white">{fmt(starMember.points)}</p>
-                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-violet-300/80">pts</p>
-                    </div>
-                  </button>
-                ) : (
-                  <div className="mt-3 rounded-xl border border-white/10 bg-black/20 p-3">
-                    <p className="text-sm font-bold text-white">Not announced yet</p>
-                  </div>
-                )}
-              </div>
-
-              {/* MONTHLY GRINDERS */}
-              <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <div className="flex items-center justify-between gap-4">
-                  <p className="text-[10px] font-black uppercase tracking-[0.26em] text-violet-200">
-                    🏆 Monthly grinders
-                  </p>
-                  <button
-                    onClick={() => nav("/leaderboard")}
-                    className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-white hover:bg-white/10"
-                  >
-                    View →
-                  </button>
-                </div>
-
-                {grinderMembers.length > 0 ? (
-                  <div className="mt-3 grid gap-2">
-                    {grinderMembers.slice(0, 3).map((p, i) => (
-                      <button
-                        key={p.id}
-                        onClick={() => setSelectedMember(p)}
-                        className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-left hover:bg-white/[0.07]"
-                      >
-                        <span className="grid h-7 w-7 place-items-center rounded-full border border-white/10 bg-black/30 text-[11px] font-black text-violet-200">
-                          {i + 1}
-                        </span>
-                        <img
-                          src={p.image || "/images/AWS-MembersPics/default.png"}
-                          alt={p.name}
-                          className="h-9 w-9 rounded-full object-cover"
-                        />
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-black text-white">{p.name}</p>
-                          <p className="truncate text-[11px] text-zinc-400">{p.role || "—"}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm font-black text-white">{fmt(p.points)}</p>
-                          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-violet-300/80">pts</p>
-                        </div>
-                      </button>
-                    ))}
-                    {grinderMembers.length > 3 && (
-                      <p className={`text-xs ${softText}`}>+{grinderMembers.length - 3} more assigned</p>
-                    )}
-                  </div>
-                ) : (
-                  <div className="mt-3 rounded-xl border border-white/10 bg-black/20 p-3">
-                    <p className="text-sm font-bold text-white">Not announced yet</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
             {/* Collaborations  */}
       <section className={`border-t ${lineColor} px-6 py-20 lg:px-8`}>
@@ -436,7 +365,6 @@ export default function HomePage() {
       </section>
 
       {/* Vision / Mission */}
-   {/* Vision / Mission - Enhanced */}
 <section
   className={`relative border-t ${lineColor} overflow-hidden px-6 py-24 lg:px-8 lg:py-32`}
   aria-labelledby="vision-mission-heading"
@@ -487,7 +415,7 @@ export default function HomePage() {
         <div className="rounded-2xl border border-violet-200/60 bg-white/[0.03] p-8 shadow-xl shadow-violet-500/5 backdrop-blur-sm dark:border-violet-700/30 dark:bg-slate-800/40 dark:shadow-violet-900/20">
           <div className="mb-4 flex items-center gap-3">
                   <div className="h-px w-12 bg-gradient-to-l from-transparent to-violet-500 dark:from-transparent dark:to-violet-500" />
-            <h3 className="text-xl bg-violet-100 rounded-full px-2 py-1 font-black text-violet-600 dark:text-white">Our Mission</h3>
+            <h3 className="text-lg bg-violet-100 rounded-full px-7 py-2 font-black uppercase text-violet-600 dark:text-white">Our Mission</h3>
                   <div className="h-px w-12 bg-gradient-to-l from-transparent to-violet-500 dark:from-transparent dark:to-violet-500" />
     
           </div>

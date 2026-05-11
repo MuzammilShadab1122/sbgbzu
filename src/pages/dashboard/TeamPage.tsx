@@ -42,17 +42,16 @@ function BigProfileCard({
 
       <div className="relative z-10 flex items-start gap-5">
         <img
-          src={p.image || "/images/AWS-MembersPics/default.jpg"}
+          src={p.image || "/images/AWS-MembersPics/default.png"}
           alt={p.name}
           className="h-20 w-20 rounded-3xl object-cover ring-1 ring-white/10"
         />
 
         <div className="min-w-0 flex-1">
-          <p className="truncate text-2xl font-black tracking-[-0.04em]">{p.name}</p>
-          <p className={`mt-1 truncate text-sm ${isDark ? "text-zinc-300" : "text-zinc-600"}`}>
+          <p className="text-2xl font-black tracking-[-0.04em]">{p.name}</p>
+          <p className={`mt-1 text-sm ${isDark ? "text-zinc-300" : "text-zinc-600"}`}>
             {p.role}
           </p>
-
           <div className="mt-4 flex flex-wrap gap-2">
             <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-violet-200">
               {p.team}
@@ -61,7 +60,7 @@ function BigProfileCard({
               {p.level}
             </span>
             {p.responsibilities && (
-              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-white/70">
+              <span className="line-clamp-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-white/70">
                 {p.responsibilities}
               </span>
             )}
@@ -69,7 +68,7 @@ function BigProfileCard({
         </div>
 
         <div className="text-right">
-          <p className="text-3xl font-black tracking-[-0.05em] text-white">{fmt(p.points)}</p>
+          <p className="text-lg font-black tracking-[-0.05em] text-white">{fmt(p.points)}</p>
           <p className="mt-1 text-[10px] font-black uppercase tracking-[0.22em] text-violet-300/80">
             points
           </p>
@@ -94,7 +93,7 @@ function MemberTile({
       className="group flex w-full items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-left transition hover:-translate-y-0.5 hover:bg-white/[0.06] hover:shadow-xl hover:shadow-violet-500/10"
     >
       <img
-        src={p.image || "/images/AWS-MembersPics/default.jpg"}
+        src={p.image || "/images/AWS-MembersPics/default.png"}
         alt={p.name}
         className="h-12 w-12 rounded-2xl object-cover ring-1 ring-white/10"
       />
@@ -321,7 +320,6 @@ export default function TeamPage() {
 
       <MemberModal
         member={selectedMember}
-        rank={0}
         canAdmin={canAdmin}
         isDark={isDark}
         starOfMonth={starOfMonth ?? -1}

@@ -2,8 +2,6 @@ export type Portfolio = {
   id: number;
   title: string;
   description: string;
-  members: string;
-  impact: string;
   image: string;
 };
 
