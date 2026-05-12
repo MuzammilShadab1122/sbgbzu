@@ -8,7 +8,6 @@ export const initialParticipants: Participant[] = [
     role: "Leader",
     team: "Core",
     level: "Lead",
-    points: 64,
     campus: "BZU",
     responsibilities: "Overall leadership and strategic direction of the AWS Student Club at BZU.",
     image: "/images/AWS-MembersPics/Mehdi Hassan.jpeg",
@@ -105,9 +104,9 @@ export const initialParticipants: Participant[] = [
   {
     id: 9,
     name: "Aqib Hussain",
-    role: "Member",
+    role: "DevOps Leader",
     team: "Technical",
-    level: "Builder",
+    level: "Developer",
     points: 59.14545455,
     campus: "BZU",
     responsibilities: "Cloud Development & DevOps",
@@ -128,9 +127,9 @@ export const initialParticipants: Participant[] = [
   {
     id: 11,
     name: "Aleena Khan",
-    role: "Member",
+    role: "Frontend Lead",
     team: "Technical",
-    level: "Builder",
+    level: "Developer",
     points: 47.63636364,
     campus: "BZU",
     responsibilities: "Frontend Development",
@@ -224,7 +223,7 @@ export const initialParticipants: Participant[] = [
   {
     id: 19,
     name: "Muhammad Rizwan",
-    role: "Member",
+    role: "Backend Developer(Member)",
     team: "Technical",
     level: "Builder",
     points: 0.000,
@@ -252,7 +251,7 @@ export const initialParticipants: Participant[] = [
     points: 0.000,
     campus: "BZU",
     responsibilities: "Outreach and Promotions",
-    image: "/images/AWS-MembersPics/default.png",
+    image: "/images/AWS-MembersPics/Uzair.jpeg",
   },
   {
     id: 22,
@@ -281,7 +280,7 @@ export const initialParticipants: Participant[] = [
   {
     id: 24,
     name: "Muzammil Shahdab",
-    role: "Member",
+    role: "AI Engineer(Member)",
     team: "Technical",
     level: "Builder",
     points: 0.000,

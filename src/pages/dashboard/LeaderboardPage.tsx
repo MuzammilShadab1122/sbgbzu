@@ -20,7 +20,10 @@ export default function LeaderboardPage() {
   const [query, setQuery] = useState("");
   const [selectedMember, setSelectedMember] = useState<any>(null);
 
-  const sorted = useMemo(() => [...participants].sort((a, b) => b.points - a.points), [participants]);
+  // Filter out leaders (they keep records, don't participate in rankings)
+  const activeParticipants = useMemo(() => participants.filter(p => p.level !== "Lead"), [participants]);
+  
+  const sorted = useMemo(() => [...activeParticipants].sort((a, b) => b.points - a.points), [activeParticipants]);
 
   const searched = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -49,7 +52,7 @@ export default function LeaderboardPage() {
       />
 
       <div className="mt-12 flex flex-col gap-4 border-b border-violet-400/30 pb-6 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-xl font-black tracking-[-0.03em]">Rankings ({participants.length})</p>
+        <p className="text-xl font-black tracking-[-0.03em]">Rankings ({activeParticipants.length})</p>
         <input
           value={query}
           onChange={e => setQuery(e.target.value)}

@@ -70,7 +70,7 @@ export default function MemberModal({
 
             <div className="space-y-3">
               {[
-                ["Points", fmt(member.points)],
+                ...(member.level !== "Lead" ? [["Points", fmt(member.points)]] : []),
                 ["Responsibility", member.responsibilities || "—"],
               ].map(([label, value]) => (
                 <div key={label} className="flex flex-col justify-between gap-6 border-b border-violet-400/15 pb-3">

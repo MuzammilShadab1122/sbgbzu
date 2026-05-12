@@ -210,13 +210,6 @@ export default function HomePage() {
       color: "from-purple-500 to-indigo-500",
     },
     {
-      label: "Learning points",
-      value: Math.round(totalPoints / 1000),
-      max: 500,
-      display: `${Math.round(totalPoints / 1000)}K`,
-      color: "from-fuchsia-500 to-violet-500",
-    },
-    {
       label: "Collaboration partners",
       value: partners.length,
       max:100,
@@ -346,7 +339,7 @@ export default function HomePage() {
                 <div className="min-w-0 flex-1"> 
                   <p className="truncate text-[13px] font-bold text-white truncate">{p.name}</p> 
                 </div> 
-                <p className="text-xs font-black text-white">{fmt(p.points)}</p> 
+                <p className="text-xs font-black text-white">{fmt(p.points)}</p>
               </button> 
             ))} 
           </div> 

@@ -10,13 +10,13 @@ export type TeamKey =
   | "Events & Operations"
   | "General";
 
-export type Level = "Lead" | "Core" | "Builder";
+export type Level = "Lead" | "Core" | "Builder" | "Developer";
 
 export interface Participant {
   id: number;
   name: string;
   role: string;
-  points: number;
+  points?: number;
 
   team: TeamKey;        // REQUIRED for static team directory
   level: Level;         // Lead/Core/Builder

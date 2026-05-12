@@ -67,12 +67,19 @@ function BigProfileCard({
           </div>
         </div>
 
-        <div className="text-right">
-          <p className="text-lg font-black tracking-[-0.05em] text-white">{fmt(p.points)}</p>
-          <p className="mt-1 text-[10px] font-black uppercase tracking-[0.22em] text-violet-300/80">
-            points
-          </p>
-        </div>
+        {p.level !== "Lead" && (
+          <div className="text-right">
+            <p className="text-lg font-black tracking-[-0.05em] text-white">{fmt(p.points)}</p>
+            <p className="mt-1 text-[10px] font-black uppercase tracking-[0.22em] text-violet-300/80">
+              points
+            </p>
+          </div>
+        )}
+        {p.level === "Lead" && (
+          <div className="text-right">
+            <span className="text-xs font-black uppercase tracking-[0.18em] text-violet-300/60"></span>
+          </div>
+        )}
       </div>
     </button>
   );
@@ -104,10 +111,16 @@ function MemberTile({
       </div>
 
       <div className="text-right">
-        <p className="text-sm font-black text-violet-200">{fmt(p.points)}</p>
-        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-violet-300/70">pts</p>
+        {p.level !== "Lead" ? (
+          <>
+            <p className="text-sm font-black text-violet-200">{fmt(p.points)}</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-violet-300/70">pts</p>
+          </>
+        ) : (
+          <span className="text-xs font-black uppercase tracking-[0.18em] text-violet-300/60"></span>
+        )}
       </div>
-    </button>
+        </button>
   );
 }
 
@@ -256,8 +269,19 @@ export default function TeamPage() {
       <section className="mt-16 space-y-14">
         {teamSections.map(({ key, members }) => {
           const meta = TEAM_META[key] || { title: key, blurb: "" };
-          const spotlight = members[0];
-          const rest = members.slice(1);
+          
+          // Technical team: show Developer-level members as spotlights
+          // Other teams: show 1 spotlight (top member)
+          let spotlights: Participant[] = [];
+          let rest: Participant[] = [];
+          
+          if (key === "Technical") {
+            spotlights = members.filter(p => p.level === "Developer");
+            rest = members.filter(p => p.level !== "Developer");
+          } else {
+            spotlights = members.slice(0, 1);
+            rest = members.slice(1);
+          }
 
           return (
             <div key={key}>
@@ -293,14 +317,23 @@ export default function TeamPage() {
               </div>
 
               {/* content */}
-              <div className="mt-6 grid gap-6 lg:grid-cols-2">
-                <BigProfileCard
-                  p={spotlight}
-                  panel={panel}
-                  isDark={isDark}
-                  onClick={() => setSelectedMember(spotlight)}
-                />
+              <div className={`mt-6 grid gap-6 ${key === "Technical" && spotlights.length > 0 ? `lg:grid-cols-${spotlights.length === 1 ? 2 : 3}` : "lg:grid-cols-2"}`}>
+                {/* Spotlights */}
+                {spotlights.length > 0 && (
+                  <div className={`${key === "Technical" && spotlights.length > 1 ? "lg:col-span-2 grid gap-6 lg:grid-cols-2" : ""}`}>
+                    {spotlights.map((p) => (
+                      <BigProfileCard
+                        key={p.id}
+                        p={p}
+                        panel={panel}
+                        isDark={isDark}
+                        onClick={() => setSelectedMember(p)}
+                      />
+                    ))}
+                  </div>
+                )}
 
+                {/* Rest of members */}
                 <div className="grid gap-3">
                   {rest.slice(0, 6).map((p) => (
                     <MemberTile key={p.id} p={p} isDark={isDark} onClick={() => setSelectedMember(p)} />
