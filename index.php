@@ -399,19 +399,21 @@ $stat_rows = [
     </div>
     
     <!-- Marquee loop container -->
-    <div class="w-full overflow-hidden relative py-2">
-        <div class="flex gap-4 w-max animate-marquee">
+    <div class="w-full overflow-hidden relative py-4">
+        <div class="flex gap-6 w-max animate-marquee items-center">
             <?php
             if (!empty($partners)) {
                 // Loop array duplication to ensure seamless visual loop
                 $marquee_loop = array_merge($partners, $partners, $partners);
                 foreach ($marquee_loop as $partner):
                 ?>
-                    <div class="flex items-center gap-3 rounded-2xl border border-slate-200 dark:border-white/5 bg-white dark:bg-white/[0.02] px-4 py-3 min-w-[200px] shrink-0 shadow-sm">
-                        <img src="<?php echo htmlspecialchars($partner['logo']); ?>" alt="<?php echo htmlspecialchars($partner['name']); ?>" class="h-8 w-8 rounded-lg object-contain bg-white/10 p-0.5">
+                    <div class="flex items-center gap-4 rounded-3xl border border-slate-200 dark:border-white/10 bg-white/90 dark:bg-white/[0.03] px-6 py-4 min-w-[280px] sm:min-w-[320px] shrink-0 shadow-md backdrop-blur-md hover:border-purple-500/40 transition-all">
+                        <div class="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-white dark:bg-white/10 p-2 flex items-center justify-center shrink-0 border border-slate-200/80 dark:border-white/10 shadow-inner">
+                            <img src="<?php echo htmlspecialchars($partner['logo']); ?>" alt="<?php echo htmlspecialchars($partner['name']); ?>" class="max-h-full max-w-full object-contain">
+                        </div>
                         <div class="min-w-0">
-                            <p class="text-xs font-black text-slate-900 dark:text-white font-space truncate"><?php echo htmlspecialchars($partner['name']); ?></p>
-                            <p class="text-[8px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">Official Partner</p>
+                            <p class="text-sm sm:text-base font-black text-slate-900 dark:text-white font-space truncate"><?php echo htmlspecialchars($partner['name']); ?></p>
+                            <p class="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 mt-0.5">Official Partner</p>
                         </div>
                     </div>
                 <?php 
