@@ -315,7 +315,7 @@ if ($current_page === 'index') {
             
             <!-- Brand Logo & Name -->
             <a href="index.php" class="flex items-center gap-3.5 group">
-                <div class="relative overflow-hidden rounded-full h-12 w-12 sm:h-13 sm:w-13 ring-2 ring-purple-500/30 shadow-md shrink-0">
+                <div class="relative overflow-hidden rounded-full h-14 w-14 sm:h-[58px] sm:w-[58px] ring-2 ring-purple-500/30 shadow-md shrink-0 bg-white dark:bg-black/40">
                     <img src="public/images/sbg-logo.png" alt="AWS SBG BZU logo" class="h-full w-full object-cover">
                 </div>
                 <div class="leading-tight">
