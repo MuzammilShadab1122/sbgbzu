@@ -15,13 +15,13 @@
             </div>
         </div>
 
-        <div class="relative z-10 mx-auto max-w-7xl px-6 py-12 lg:px-8">
+        <div class="relative z-10 mx-auto max-w-[1440px] px-6 py-12 lg:px-8">
             <div class="grid grid-cols-1 gap-10 md:grid-cols-4">
                 
                 <!-- Brand Profile -->
                 <div class="md:col-span-2">
-                    <div class="flex items-center gap-3">
-                        <img src="public/images/sbg-logo.png" alt="AWS SBG BZU logo" class="h-10 w-10 rounded-full object-contain">
+                    <div class="flex items-center gap-3.5">
+                        <img src="public/images/sbg-logo.png" alt="AWS SBG BZU logo" class="h-13 w-13 rounded-full object-cover ring-2 ring-purple-500/20 shadow-md">
                         <div>
                             <p class="text-base font-black tracking-tight text-slate-900 dark:text-white">
                                 AWS Student Builder Group BZU

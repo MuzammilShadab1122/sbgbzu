@@ -76,7 +76,7 @@ $stat_rows = [
 
 <!-- 1. HERO GREETING BLOCK -->
 <section class="relative px-4 sm:px-6 pt-12 pb-8 overflow-hidden">
-    <div class="mx-auto max-w-7xl relative z-10">
+    <div class="mx-auto max-w-[1440px] relative z-10">
         <div class="grid gap-12 lg:grid-cols-12 items-center">
             
             <!-- Left content: Text & Badge -->
@@ -162,7 +162,7 @@ $stat_rows = [
 
 <!-- 2. COMMUNITY BADGES -->
 <section class="px-4 sm:px-6 py-6">
-    <div class="mx-auto max-w-7xl">
+    <div class="mx-auto max-w-[1440px]">
         <div class="rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.02] p-8 shadow-lg neon-glow-active">
             <div class="text-center sm:text-left mb-8">
                 <span class="text-[9px] font-black uppercase tracking-[0.2em] text-purple-600 dark:text-purple-400">Official Status Recognition</span>
@@ -196,7 +196,7 @@ $stat_rows = [
 
 <!-- 2. BUILDERS SPOTLIGHT PANEL (STAR & GRINDERS HIGHLIGHT AT THE TOP) -->
 <section class="px-4 sm:px-6 py-4">
-    <div class="mx-auto max-w-7xl">
+    <div class="mx-auto max-w-[1440px]">
         <div class="grid gap-6 lg:grid-cols-12 items-stretch">
             
             <!-- Star of the Month Card (Glow card) -->
@@ -294,7 +294,7 @@ $stat_rows = [
 
 <!-- 3. HORIZONTAL DYNAMIC INSIGHT STATS (MOBILE-FRIENDLY SWIPE DECK) -->
 <section class="px-4 sm:px-6 py-4">
-    <div class="mx-auto max-w-7xl">
+    <div class="mx-auto max-w-[1440px]">
         <div class="flex items-center justify-between mb-4">
             <span class="text-[10px] font-black uppercase tracking-[0.24em] text-purple-600 dark:text-purple-400"> Ecosystem Metrics</span>
             <span class="text-[9px] font-bold text-slate-450 uppercase tracking-wider hidden sm:inline-block">Swipe horizontally ↔</span>
@@ -322,7 +322,7 @@ $stat_rows = [
 
 <!-- 4. COMMUNITY LEADERSHIP & VISION -->
 <section class="relative overflow-hidden px-4 sm:px-6 py-12">
-    <div class="mx-auto max-w-7xl">
+    <div class="mx-auto max-w-[1440px]">
         <div class="grid gap-12 lg:grid-cols-2 items-center">
             
             <!-- Tech Illustration (Visual representation) -->
@@ -360,7 +360,7 @@ $stat_rows = [
 
 <!-- 5. LATEST BLOG NOTICES (BUTTONS COMPLETELY REMOVED!) -->
 <section class="px-4 sm:px-6 py-12">
-    <div class="mx-auto max-w-7xl">
+    <div class="mx-auto max-w-[1440px]">
         <div class="flex items-end justify-between border-b border-slate-200 dark:border-white/10 pb-5 mb-8">
             <div>
                 <p class="text-[9px] font-black uppercase tracking-[0.28em] text-purple-600 dark:text-purple-400">Bulletin Updates</p>
@@ -394,7 +394,7 @@ $stat_rows = [
 
 <!-- 6. PARTNERS MARQUEE LOOP (AT THE BOTTOM) -->
 <section class="border-t border-slate-200 dark:border-white/10 py-12 overflow-hidden bg-slate-100/50 dark:bg-black/20">
-    <div class="mx-auto max-w-7xl px-6 mb-6">
+    <div class="mx-auto max-w-[1440px] px-6 mb-6">
         <p class="text-center text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">Campus Chapter Partners</p>
     </div>
     

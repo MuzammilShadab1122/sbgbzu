@@ -14,7 +14,7 @@ foreach ($events as $e) {
 }
 ?>
 
-<div class="mx-auto max-w-7xl px-4 sm:px-6 pb-24 pt-8 lg:px-8">
+<div class="mx-auto max-w-[1440px] px-4 sm:px-6 pb-24 pt-8 lg:px-8">
     <!-- Breadcrumbs -->
     <div class="mb-4 text-[9px] font-black uppercase tracking-[0.24em] text-slate-400 dark:text-zinc-400">
         <span>AWS Student Builders</span>

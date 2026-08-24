@@ -311,18 +311,18 @@ if ($current_page === 'index') {
 
     <!-- TOP NAV (DESKTOP) -->
     <header class="fixed inset-x-0 top-0 z-40 px-4 py-3 lg:px-8 pointer-events-none">
-        <div class="mx-auto flex max-w-7xl items-center justify-between rounded-full px-4 py-2 transition-all duration-300 bg-white/90 dark:bg-black/45 border border-slate-200/80 dark:border-white/10 backdrop-blur-xl shadow-md dark:shadow-black/20 pointer-events-auto">
+        <div class="mx-auto flex max-w-[1440px] items-center justify-between rounded-full px-4 py-2 transition-all duration-300 bg-white/90 dark:bg-black/45 border border-slate-200/80 dark:border-white/10 backdrop-blur-xl shadow-md dark:shadow-black/20 pointer-events-auto">
             
             <!-- Brand Logo & Name -->
-            <a href="index.php" class="flex items-center gap-3 group">
-                <div class="relative overflow-hidden rounded-full h-10 w-10 ring-2 ring-purple-500/20">
+            <a href="index.php" class="flex items-center gap-3.5 group">
+                <div class="relative overflow-hidden rounded-full h-12 w-12 sm:h-13 sm:w-13 ring-2 ring-purple-500/30 shadow-md shrink-0">
                     <img src="public/images/sbg-logo.png" alt="AWS SBG BZU logo" class="h-full w-full object-cover">
                 </div>
-                <div class="leading-none">
-                    <span class="block text-xs font-black uppercase tracking-[0.2em] text-purple-600 dark:text-purple-400">
+                <div class="leading-tight">
+                    <span class="block text-xs sm:text-sm font-black uppercase tracking-[0.2em] text-purple-600 dark:text-purple-400">
                         AWS Student Builder Group
                     </span>
-                    <span class="block text-[9px] font-bold uppercase tracking-[0.14em] text-slate-500 dark:text-zinc-400 mt-1">
+                    <span class="block text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500 dark:text-zinc-400 mt-0.5">
                         BZU Multan Campus
                     </span>
                 </div>
@@ -439,7 +439,7 @@ if ($current_page === 'index') {
     <main class="flex-grow pt-20 lg:pt-24 z-10 relative">
         
         <!-- DYNAMIC LOCAL TIME GREETING BANNER -->
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 pt-4">
+        <div class="mx-auto max-w-[1440px] px-4 sm:px-6 pt-4">
             <div class="rounded-2xl border border-slate-200 dark:border-white/5 bg-white/70 dark:bg-white/[0.01] px-4 py-3 flex items-center justify-between gap-4 backdrop-blur-md shadow-sm">
                 <div class="flex items-center gap-2.5">
                     <span class="text-base animate-float">⚡</span>
