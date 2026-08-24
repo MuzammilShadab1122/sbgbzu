@@ -159,13 +159,13 @@ if (!function_exists('get_member_tier_class')) {
             
             $meta = $team_meta[$team_name] ?: ['title' => $team_name, 'blurb' => ''];
             
-            // Technical Team Spotlight logic (Developer-level)
+            // Team Spotlight logic
             $spotlights = [];
             $rest = [];
             
             if ($team_name === 'Technical') {
                 foreach ($team_members as $m) {
-                    if ($m['level'] === 'Developer') {
+                    if (in_array($m['level'], ['Lead', 'Directorate', 'Manager', 'Core Team'])) {
                         $spotlights[] = $m;
                     } else {
                         $rest[] = $m;

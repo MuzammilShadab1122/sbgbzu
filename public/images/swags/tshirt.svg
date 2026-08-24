@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect width="200" height="200" rx="30" fill="#0f0c1b"/>
+  <path d="M60 45 L85 60 C95 65 105 65 115 60 L140 45 L175 75 L150 100 L140 90 L140 170 L60 170 L60 90 L50 100 L25 75 Z" fill="#9333ea" stroke="#c084fc" stroke-width="3"/>
+  <text x="100" y="115" fill="#ffffff" font-size="14" font-weight="900" font-family="sans-serif" text-anchor="middle">AWS BUILDER</text>
+</svg>

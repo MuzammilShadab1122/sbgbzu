@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect width="200" height="200" rx="30" fill="#0f0c1b"/>
+  <rect x="35" y="55" width="130" height="95" rx="12" fill="#1e1b2e" stroke="#a855f7" stroke-width="3"/>
+  <path d="M35 75 L165 75" stroke="#3b0764" stroke-width="2"/>
+  <circle cx="100" cy="110" r="22" fill="#9333ea"/>
+  <text x="100" y="115" fill="#ffffff" font-size="14" font-weight="900" font-family="sans-serif" text-anchor="middle">☁️</text>
+</svg>

@@ -66,11 +66,11 @@ try {
         ) ENGINE=InnoDB;");
         
         $db->exec("INSERT INTO `swags` (`name`, `points`, `image`, `description`, `stock`) VALUES 
-            ('AWS Builder T-Shirt', 50.0000, 'public/images/swags/tshirt.png', 'Official AWS Student Builder Group branded premium cotton t-shirt.', 10),
-            ('AWS Stainless Water Bottle', 40.0000, 'public/images/swags/bottle.png', 'Insulated AWS matte black metal water flask.', 15),
-            ('AWS Laptop Sleeve', 35.0000, 'public/images/swags/sleeve.png', 'Neoprene protective laptop sleeve with AWS Cloud logo.', 8),
-            ('AWS Cloud Ceramic Mug', 25.0000, 'public/images/swags/mug.png', 'Premium ceramic coffee mug for late night cloud building sessions.', 20),
-            ('AWS Stickers & Badges Pack', 15.0000, 'public/images/swags/stickers_pack.png', 'High quality vinyl AWS cloud service & architecture stickers pack.', 50)");
+            ('AWS Builder T-Shirt', 50.0000, 'public/images/swags/tshirt.svg', 'Official AWS Student Builder Group branded premium cotton t-shirt.', 10),
+            ('AWS Stainless Water Bottle', 40.0000, 'public/images/swags/bottle.svg', 'Insulated AWS matte black metal water flask.', 15),
+            ('AWS Laptop Sleeve', 35.0000, 'public/images/swags/sleeve.svg', 'Neoprene protective laptop sleeve with AWS Cloud logo.', 8),
+            ('AWS Cloud Ceramic Mug', 25.0000, 'public/images/swags/mug.svg', 'Premium ceramic coffee mug for late night cloud building sessions.', 20),
+            ('AWS Stickers & Badges Pack', 15.0000, 'public/images/swags/stickers_pack.svg', 'High quality vinyl AWS cloud service & architecture stickers pack.', 50)");
     }
 
     // Check if swag_requests table exists, if not, create it
@@ -86,6 +86,29 @@ try {
         ) ENGINE=InnoDB;");
     }
 
+    // Dynamic column migrations for existing databases
+    try {
+        $colCheck = $db->query("SHOW COLUMNS FROM `members` LIKE 'member_code'")->rowCount();
+        if ($colCheck === 0) {
+            $db->exec("ALTER TABLE `members` ADD COLUMN `member_code` VARCHAR(100) UNIQUE NULL AFTER `id`");
+        }
+        // Auto-assign member_code for any member where member_code is NULL or empty
+        $nullCodes = $db->query("SELECT id FROM `members` WHERE `member_code` IS NULL OR `member_code` = ''")->fetchAll();
+        if (!empty($nullCodes)) {
+            $upd = $db->prepare("UPDATE `members` SET `member_code` = ? WHERE `id` = ?");
+            foreach ($nullCodes as $nc) {
+                $upd->execute(['SBG-' . sprintf('%03d', $nc['id']), $nc['id']]);
+            }
+        }
+    } catch (Exception $e) {}
+
+    try {
+        $colCheck = $db->query("SHOW COLUMNS FROM `members` LIKE 'password'")->rowCount();
+        if ($colCheck === 0) {
+            $db->exec("ALTER TABLE `members` ADD COLUMN `password` VARCHAR(255) NULL AFTER `image`");
+        }
+    } catch (Exception $e) {}
+
     // Check if tables exist, otherwise construct schema and import initial seeds
     $tableExists = $db->query("SHOW TABLES LIKE 'members'")->rowCount() > 0;
     
@@ -98,9 +121,10 @@ try {
             `role` VARCHAR(50) DEFAULT 'admin'
         ) ENGINE=InnoDB;");
         
-        // Members Table (Directory database)
+        // Members Table (Directory database with authentication)
         $db->exec("CREATE TABLE IF NOT EXISTS `members` (
             `id` INT AUTO_INCREMENT PRIMARY KEY,
+            `member_code` VARCHAR(100) UNIQUE NULL,
             `name` VARCHAR(255) NOT NULL,
             `role` VARCHAR(255) NOT NULL,
             `team` VARCHAR(100) NOT NULL,
@@ -108,7 +132,8 @@ try {
             `points` DECIMAL(12,4) DEFAULT 0.0000,
             `campus` VARCHAR(255) DEFAULT 'BZU',
             `responsibilities` TEXT,
-            `image` VARCHAR(255)
+            `image` VARCHAR(255),
+            `password` VARCHAR(255) DEFAULT NULL
         ) ENGINE=InnoDB;");
         
         // Events Table (Workshops, meetups, galleries)
@@ -154,10 +179,13 @@ try {
             
             // Seed members
             if (isset($participants) && is_array($participants)) {
-                $stmt = $db->prepare("INSERT INTO `members` (`id`, `name`, `role`, `team`, `level`, `points`, `campus`, `responsibilities`, `image`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt = $db->prepare("INSERT INTO `members` (`id`, `member_code`, `name`, `role`, `team`, `level`, `points`, `campus`, `responsibilities`, `image`, `password`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 foreach ($participants as $p) {
+                    $code = $p['member_code'] ?? ('SBG-' . sprintf('%03d', $p['id']));
+                    $pass = !empty($p['password']) ? password_hash($p['password'], PASSWORD_DEFAULT) : password_hash('awsbzu' . $p['id'], PASSWORD_DEFAULT);
                     $stmt->execute([
                         $p['id'],
+                        $code,
                         $p['name'],
                         $p['role'],
                         $p['team'],
@@ -165,7 +193,8 @@ try {
                         $p['points'],
                         $p['campus'],
                         $p['responsibilities'],
-                        $p['image']
+                        $p['image'],
+                        $pass
                     ]);
                 }
             }
@@ -215,6 +244,32 @@ try {
             }
         }
     }
+
+    // Migration: Ensure member_code and password columns exist on members table
+    $cols = $db->query("SHOW COLUMNS FROM `members` LIKE 'member_code'")->fetchAll();
+    if (count($cols) === 0) {
+        $db->exec("ALTER TABLE `members` ADD COLUMN `member_code` VARCHAR(100) UNIQUE NULL AFTER `id`");
+    }
+    // Auto-assign member_code for any member where member_code is NULL or empty
+    $nullCodes = $db->query("SELECT id FROM `members` WHERE `member_code` IS NULL OR `member_code` = ''")->fetchAll();
+    if (!empty($nullCodes)) {
+        $upd = $db->prepare("UPDATE `members` SET `member_code` = ? WHERE `id` = ?");
+        foreach ($nullCodes as $nc) {
+            $upd->execute(['SBG-' . sprintf('%03d', $nc['id']), $nc['id']]);
+        }
+    }
+
+    $colsPass = $db->query("SHOW COLUMNS FROM `members` LIKE 'password'")->fetchAll();
+    if (count($colsPass) === 0) {
+        $db->exec("ALTER TABLE `members` ADD COLUMN `password` VARCHAR(255) DEFAULT NULL AFTER `image`");
+    }
+
+    // Migration: Standardize all member levels to the strict 5 allowed levels ('Core Team', 'Directorate', 'Manager', 'Lead', 'Member')
+    try {
+        $db->exec("UPDATE `members` SET `level` = 'Core Team' WHERE `level` = 'Core'");
+        $db->exec("UPDATE `members` SET `level` = 'Member' WHERE `level` IN ('Builder', 'Developer') OR `level` IS NULL OR `level` = ''");
+    } catch (Exception $e) {}
+
 } catch (PDOException $e) {
     die("Database Connection failed: " . $e->getMessage());
 }
@@ -268,7 +323,7 @@ try {
     $swags = $stmt->fetchAll();
 
     // 1.95 Fetch all swag requests with member and swag details
-    $stmt = $db->query("SELECT r.*, m.name AS member_name, m.role AS member_role, m.points AS member_current_points, m.image AS member_image, s.name AS swag_name, s.image AS swag_image, s.points AS swag_required_points 
+    $stmt = $db->query("SELECT r.*, m.name AS member_name, m.member_code AS member_code, m.role AS member_role, m.points AS member_current_points, m.image AS member_image, s.name AS swag_name, s.image AS swag_image, s.points AS swag_required_points 
                         FROM `swag_requests` r 
                         JOIN `members` m ON r.member_id = m.id 
                         JOIN `swags` s ON r.swag_id = s.id 

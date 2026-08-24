@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect width="200" height="200" rx="30" fill="#0f0c1b"/>
+  <rect x="90" y="30" width="20" height="15" rx="3" fill="#cbd5e1"/>
+  <rect x="85" y="45" width="30" height="15" rx="5" fill="#a855f7"/>
+  <rect x="70" y="60" width="60" height="110" rx="15" fill="#9333ea" stroke="#c084fc" stroke-width="3"/>
+  <text x="100" y="120" fill="#ffffff" font-size="18" font-weight="900" font-family="sans-serif" text-anchor="middle">⚡ AWS</text>
+</svg>

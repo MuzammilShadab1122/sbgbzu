@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect width="200" height="200" rx="30" fill="#0f0c1b"/>
+  <path d="M140 75 C165 75 165 125 140 125" fill="none" stroke="#a855f7" stroke-width="8" stroke-linecap="round"/>
+  <rect x="55" y="60" width="85" height="90" rx="12" fill="#9333ea" stroke="#c084fc" stroke-width="3"/>
+  <text x="97" y="115" fill="#ffffff" font-size="20" font-weight="900" font-family="sans-serif" text-anchor="middle">☕ AWS</text>
+</svg>

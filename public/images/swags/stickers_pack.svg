@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect width="200" height="200" rx="30" fill="#0f0c1b"/>
+  <rect x="40" y="50" width="80" height="80" rx="16" fill="#a855f7" transform="rotate(-10 80 90)"/>
+  <rect x="80" y="60" width="80" height="80" rx="16" fill="#ec4899" transform="rotate(15 120 100)"/>
+  <circle cx="100" cy="100" r="35" fill="#9333ea" stroke="#ffffff" stroke-width="3"/>
+  <text x="100" y="106" fill="#ffffff" font-size="16" font-weight="900" font-family="sans-serif" text-anchor="middle">🏷️ AWS</text>
+</svg>

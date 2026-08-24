@@ -32,33 +32,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
     try {
         if ($action === 'add_member') {
-            $name = trim($_POST['name']);
-            $role = trim($_POST['role']);
-            $team = $_POST['team'];
-            $level = $_POST['level'];
-            $points = floatval($_POST['points']);
-            $campus = trim($_POST['campus']) ?: 'BZU';
-            $responsibilities = trim($_POST['responsibilities']);
+            $name = trim($_POST['name'] ?? '');
+            $member_code = trim($_POST['member_code'] ?? '');
+            $password = trim($_POST['password'] ?? '');
+            $role = trim($_POST['role'] ?? '');
+            $team = $_POST['team'] ?? 'Technical';
+            $allowed_levels = ['Core Team', 'Directorate', 'Manager', 'Lead', 'Member'];
+            $level = in_array($_POST['level'] ?? '', $allowed_levels) ? $_POST['level'] : 'Member';
+            $points = floatval($_POST['points'] ?? 0);
+            $campus = trim($_POST['campus'] ?? '') ?: 'BZU';
+            $responsibilities = trim($_POST['responsibilities'] ?? '');
             
-            // Handle image upload
-            $imagePath = 'public/images/AWS-MembersPics/default.png';
-            if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-                $filename = time() . '_' . basename($_FILES['image']['name']);
-                $targetFile = 'public/images/AWS-MembersPics/' . $filename;
-                
-                // Ensure directory exists
-                if (!is_dir('public/images/AWS-MembersPics/')) {
-                    mkdir('public/images/AWS-MembersPics/', 0755, true);
-                }
-                
-                if (move_uploaded_file($_FILES['image']['tmp_name'], $targetFile)) {
-                    $imagePath = $targetFile;
+            if (empty($name) || empty($member_code) || empty($password)) {
+                $error = "Full Name, Member ID, and Password are required to create a builder account.";
+            } else {
+                // Check if member_code already exists
+                $chk = $db->prepare("SELECT id FROM `members` WHERE LOWER(`member_code`) = LOWER(?)");
+                $chk->execute([$member_code]);
+                if ($chk->fetch()) {
+                    $error = "Member ID '$member_code' already exists. Please assign a unique Member ID.";
+                } else {
+                    // Handle image upload
+                    $imagePath = 'public/images/AWS-MembersPics/default.png';
+                    if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+                        $filename = time() . '_' . basename($_FILES['image']['name']);
+                        $targetFile = 'public/images/AWS-MembersPics/' . $filename;
+                        
+                        // Ensure directory exists
+                        if (!is_dir('public/images/AWS-MembersPics/')) {
+                            mkdir('public/images/AWS-MembersPics/', 0755, true);
+                        }
+                        
+                        if (move_uploaded_file($_FILES['image']['tmp_name'], $targetFile)) {
+                            $imagePath = $targetFile;
+                        }
+                    }
+
+                    $passHash = password_hash($password, PASSWORD_DEFAULT);
+                    $stmt = $db->prepare("INSERT INTO `members` (`member_code`, `name`, `role`, `team`, `level`, `points`, `campus`, `responsibilities`, `image`, `password`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                    $stmt->execute([$member_code, $name, $role, $team, $level, $points, $campus, $responsibilities, $imagePath, $passHash]);
+                    $success = "Builder '$name' (Member ID: <strong>$member_code</strong>) added successfully with custom login credentials.";
                 }
             }
-
-            $stmt = $db->prepare("INSERT INTO `members` (`name`, `role`, `team`, `level`, `points`, `campus`, `responsibilities`, `image`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-            $stmt->execute([$name, $role, $team, $level, $points, $campus, $responsibilities, $imagePath]);
-            $success = "Member '$name' added successfully.";
+            
+        } elseif ($action === 'reset_member_password') {
+            $member_id = intval($_POST['member_id']);
+            $new_pass = trim($_POST['new_password'] ?? '');
+            if (!empty($new_pass)) {
+                $new_hash = password_hash($new_pass, PASSWORD_DEFAULT);
+                $stmt = $db->prepare("UPDATE `members` SET `password` = ? WHERE `id` = ?");
+                $stmt->execute([$new_hash, $member_id]);
+                $success = "Password updated successfully.";
+            } else {
+                $error = "Please enter a valid password.";
+            }
             
         } elseif ($action === 'update_points') {
             $member_id = intval($_POST['member_id']);
@@ -93,14 +120,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 }
             }
             
-        } elseif ($action === 'degrade_member') {
+        } elseif ($action === 'degrade_member' || $action === 'edit_builder') {
             $member_id = intval($_POST['member_id']);
-            $level = $_POST['level'];
-            $role = trim($_POST['role']);
+            $name = trim($_POST['name'] ?? '');
+            $member_code = trim($_POST['member_code'] ?? '');
+            $allowed_levels = ['Core Team', 'Directorate', 'Manager', 'Lead', 'Member'];
+            $level = in_array($_POST['level'] ?? '', $allowed_levels) ? $_POST['level'] : 'Member';
+            $role = trim($_POST['role'] ?? '');
+            $new_password = trim($_POST['new_password'] ?? '');
             
-            $stmt = $db->prepare("UPDATE `members` SET `level` = ?, `role` = ? WHERE `id` = ?");
-            $stmt->execute([$level, $role, $member_id]);
-            $success = "Member level and role updated.";
+            // Validate member_code uniqueness if specified
+            if (!empty($member_code)) {
+                $chk = $db->prepare("SELECT id FROM `members` WHERE LOWER(`member_code`) = LOWER(?) AND `id` != ?");
+                $chk->execute([$member_code, $member_id]);
+                if ($chk->fetch()) {
+                    $error = "Member ID '$member_code' is already assigned to another builder.";
+                }
+            }
+            
+            if (empty($error)) {
+                $stmt = $db->prepare("UPDATE `members` SET `name` = ?, `member_code` = ?, `level` = ?, `role` = ? WHERE `id` = ?");
+                $stmt->execute([$name, $member_code, $level, $role, $member_id]);
+
+                if (!empty($new_password)) {
+                    $new_hash = password_hash($new_password, PASSWORD_DEFAULT);
+                    $stmt = $db->prepare("UPDATE `members` SET `password` = ? WHERE `id` = ?");
+                    $stmt->execute([$new_hash, $member_id]);
+                }
+
+                $success = "Builder profile (Name, Member ID: $member_code, Role, Level & Credentials) updated successfully.";
+            }
             
         } elseif ($action === 'delete_member') {
             $member_id = intval($_POST['member_id']);
@@ -399,29 +448,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     <?php endif; ?>
 
     <!-- TAB SELECTORS -->
-    <div class="flex gap-2 overflow-x-auto no-scrollbar border-b border-slate-200 dark:border-white/10 pb-2 mb-8">
-        <button onclick="switchTab('members-tab')" id="members-tab-btn" class="tab-btn active-tab rounded-full px-5 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all">
+    <div class="flex gap-2 overflow-x-auto no-scrollbar border-b border-slate-200 dark:border-white/10 pb-2 mb-8 relative z-20">
+        <button type="button" data-tab="members-tab" onclick="switchTab('members-tab')" id="members-tab-btn" class="tab-btn active-tab rounded-full px-5 py-2.5 text-[10px] font-black uppercase tracking-widest cursor-pointer relative z-20 transition-all">
             👥 Members Directory
         </button>
-        <button onclick="switchTab('badges-tab')" id="badges-tab-btn" class="tab-btn rounded-full px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-all">
+        <button type="button" data-tab="badges-tab" onclick="switchTab('badges-tab')" id="badges-tab-btn" class="tab-btn rounded-full px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white cursor-pointer relative z-20 transition-all">
             🏅 Community Badges
         </button>
-        <button onclick="switchTab('partners-tab')" id="partners-tab-btn" class="tab-btn rounded-full px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-all">
+        <button type="button" data-tab="partners-tab" onclick="switchTab('partners-tab')" id="partners-tab-btn" class="tab-btn rounded-full px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white cursor-pointer relative z-20 transition-all">
             🤝 Campus Partners
         </button>
-        <button onclick="switchTab('highlights-tab')" id="highlights-tab-btn" class="tab-btn rounded-full px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-all">
+        <button type="button" data-tab="highlights-tab" onclick="switchTab('highlights-tab')" id="highlights-tab-btn" class="tab-btn rounded-full px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white cursor-pointer relative z-20 transition-all">
             🏆 Month Spotlights
         </button>
-        <button onclick="switchTab('swags-tab')" id="swags-tab-btn" class="tab-btn rounded-full px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-all">
+        <button type="button" data-tab="swags-tab" onclick="switchTab('swags-tab')" id="swags-tab-btn" class="tab-btn rounded-full px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white cursor-pointer relative z-20 transition-all">
             🎁 AWS Swags Catalog
         </button>
-        <button onclick="switchTab('claims-tab')" id="claims-tab-btn" class="tab-btn rounded-full px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-all">
+        <button type="button" data-tab="claims-tab" onclick="switchTab('claims-tab')" id="claims-tab-btn" class="tab-btn rounded-full px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white cursor-pointer relative z-20 transition-all">
             🛒 Member Swag Claims
         </button>
-        <button onclick="switchTab('events-tab')" id="events-tab-btn" class="tab-btn rounded-full px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-all">
+        <button type="button" data-tab="events-tab" onclick="switchTab('events-tab')" id="events-tab-btn" class="tab-btn rounded-full px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white cursor-pointer relative z-20 transition-all">
             📅 Sessions/Gallery
         </button>
-        <button onclick="switchTab('posts-tab')" id="posts-tab-btn" class="tab-btn rounded-full px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-all">
+        <button type="button" data-tab="posts-tab" onclick="switchTab('posts-tab')" id="posts-tab-btn" class="tab-btn rounded-full px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white cursor-pointer relative z-20 transition-all">
             📰 Notices & Blog
         </button>
     </div>
@@ -436,7 +485,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     <input type="hidden" name="action" value="add_member">
                     <div>
                         <label class="block text-[9px] font-black uppercase text-slate-500 tracking-wider mb-1">Full Name</label>
-                        <input type="text" name="name" required class="form-input w-full rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-4 py-2.5 text-xs text-slate-900 dark:text-white outline-none focus:border-purple-500">
+                        <input type="text" name="name" required placeholder="e.g. Ali Ahmed" class="form-input w-full rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-4 py-2.5 text-xs text-slate-900 dark:text-white outline-none focus:border-purple-500">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[9px] font-black uppercase text-slate-500 tracking-wider mb-1">Member ID (Login ID)</label>
+                            <input type="text" name="member_code" required placeholder="e.g. SBG-105" class="form-input w-full rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-4 py-2.5 text-xs text-slate-900 dark:text-white outline-none focus:border-purple-500 font-mono">
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-black uppercase text-slate-500 tracking-wider mb-1">Account Password</label>
+                            <input type="password" name="password" required placeholder="••••••••" class="form-input w-full rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-4 py-2.5 text-xs text-slate-900 dark:text-white outline-none focus:border-purple-500">
+                        </div>
                     </div>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
@@ -463,10 +522,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         <div>
                             <label class="block text-[9px] font-black uppercase text-slate-500 tracking-wider mb-1">Level Tier</label>
                             <select name="level" class="form-input w-full rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0d0a15] px-4 py-2.5 text-xs text-slate-900 dark:text-white outline-none focus:border-purple-500">
+                                <option value="Core Team">Core Team</option>
+                                <option value="Directorate">Directorate</option>
+                                <option value="Manager">Manager</option>
                                 <option value="Lead">Lead</option>
-                                <option value="Core">Core</option>
-                                <option value="Developer">Developer</option>
-                                <option value="Builder" selected>Builder</option>
+                                <option value="Member" selected>Member</option>
                             </select>
                         </div>
                     </div>
@@ -492,7 +552,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             <div class="lg:col-span-2 rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.02] p-6 shadow-md">
                 <div class="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-4 mb-4">
                     <h3 class="text-lg font-black text-slate-900 dark:text-white font-space">Manage Members (<?php echo count($participants); ?>)</h3>
-                    <input type="text" id="member-filter" placeholder="Filter names..." class="rounded-full border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-4 py-2 text-[10px] text-slate-900 dark:text-white outline-none focus:border-purple-500">
+                    <input type="text" id="member-filter" placeholder="Filter names or IDs..." class="rounded-full border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-4 py-2 text-[10px] text-slate-900 dark:text-white outline-none focus:border-purple-500">
                 </div>
                 
                 <form id="bulk-points-form" action="admin.php" method="POST" class="space-y-4">
@@ -511,13 +571,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
                     <div class="space-y-4 max-h-[600px] overflow-y-auto pr-2 no-scrollbar">
                         <?php foreach ($participants as $p): ?>
-                            <div class="member-list-item flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.01] p-4 text-left" data-name="<?php echo htmlspecialchars(strtolower($p['name'])); ?>">
+                            <?php $p_code = $p['member_code'] ?? ('SBG-' . sprintf('%03d', $p['id'])); ?>
+                            <div class="member-list-item flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.01] p-4 text-left" data-name="<?php echo htmlspecialchars(strtolower($p['name'] . ' ' . $p_code)); ?>">
                                 <div class="flex items-center gap-3">
                                     <input type="checkbox" name="selected_members[]" value="<?php echo $p['id']; ?>" class="member-checkbox rounded border-slate-300 dark:border-white/15 text-purple-600 focus:ring-purple-500 bg-transparent h-4 w-4 cursor-pointer">
                                     <img src="<?php echo $p['image'] ?: 'public/images/AWS-MembersPics/default.png'; ?>" class="h-10 w-10 rounded-xl object-cover border border-slate-200 dark:border-white/10">
                                     <div>
-                                        <p class="text-sm font-bold text-slate-900 dark:text-white"><?php echo $p['name']; ?></p>
-                                        <p class="text-[9px] font-black uppercase tracking-widest text-purple-600 dark:text-purple-400"><?php echo $p['role']; ?> • <?php echo $p['level']; ?> (<?php echo $p['team']; ?>)</p>
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <p class="text-sm font-bold text-slate-900 dark:text-white"><?php echo $p['name']; ?></p>
+                                            <span class="inline-block rounded-md bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 text-[9px] font-mono font-bold text-purple-600 dark:text-purple-400">
+                                                ID: <?php echo htmlspecialchars($p_code); ?>
+                                            </span>
+                                        </div>
+                                        <p class="text-[9px] font-black uppercase tracking-widest text-purple-600 dark:text-purple-400 mt-0.5"><?php echo $p['role']; ?> • <?php echo $p['level']; ?> (<?php echo $p['team']; ?>)</p>
                                     </div>
                                 </div>
                                 
@@ -531,9 +597,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                                         </button>
                                     </div>
 
-                                    <!-- Degrade overlay trigger using data-* attributes -->
-                                    <button type="button" data-id="<?php echo $p['id']; ?>" data-level="<?php echo htmlspecialchars($p['level'], ENT_QUOTES, 'UTF-8'); ?>" data-role="<?php echo htmlspecialchars($p['role'], ENT_QUOTES, 'UTF-8'); ?>" onclick="toggleDegradeModal(this)" class="rounded-full bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20 px-3.5 py-1.5 text-[9px] font-black uppercase tracking-widest text-slate-700 dark:text-zinc-350 cursor-pointer">
-                                        Status
+                                    <!-- Edit Builder Profile & Credentials overlay trigger -->
+                                    <button type="button" 
+                                            data-id="<?php echo $p['id']; ?>" 
+                                            data-code="<?php echo htmlspecialchars($p_code, ENT_QUOTES, 'UTF-8'); ?>"
+                                            data-name="<?php echo htmlspecialchars($p['name'], ENT_QUOTES, 'UTF-8'); ?>" 
+                                            data-level="<?php echo htmlspecialchars($p['level'], ENT_QUOTES, 'UTF-8'); ?>" 
+                                            data-role="<?php echo htmlspecialchars($p['role'], ENT_QUOTES, 'UTF-8'); ?>" 
+                                            onclick="toggleDegradeModal(this)" 
+                                            class="rounded-full bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20 px-3.5 py-1.5 text-[9px] font-black uppercase tracking-widest text-slate-700 dark:text-zinc-350 cursor-pointer">
+                                        Edit Profile
                                     </button>
 
                                     <!-- Delete member trigger -->
@@ -888,7 +961,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
             <!-- List Swags -->
             <div class="lg:col-span-2 rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.02] p-6 shadow-md">
-                <h3 class="text-lg font-black text-slate-900 dark:text-white font-space mb-4">Swags Inventory (<?php echo count($swags); ?>)</h3>
+                <h3 class="text-lg font-black text-slate-900 dark:text-white font-space mb-4">Swags Inventory (<?php echo count($swags ?? []); ?>)</h3>
                 
                 <div class="space-y-4 max-h-[600px] overflow-y-auto pr-2 no-scrollbar">
                     <?php if (empty($swags)): ?>
@@ -898,12 +971,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.01] p-4 text-left">
                                 <div class="flex items-center gap-4">
                                     <div class="w-14 h-14 flex items-center justify-center shrink-0 border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 rounded-xl overflow-hidden p-1.5">
-                                        <img src="<?php echo htmlspecialchars($swag['image']); ?>" alt="" class="w-full h-full object-contain">
+                                        <img src="<?php echo htmlspecialchars($swag['image'] ?? ''); ?>" alt="" class="w-full h-full object-contain">
                                     </div>
                                     <div>
-                                        <h4 class="text-sm font-bold text-slate-900 dark:text-white"><?php echo htmlspecialchars($swag['name']); ?></h4>
-                                        <p class="text-xs font-black uppercase text-purple-600 dark:text-purple-400">⚡ <?php echo number_format($swag['points'], 2); ?> PTS • Stock: <?php echo intval($swag['stock']); ?></p>
-                                        <p class="text-[10px] text-slate-500 font-medium line-clamp-1 mt-0.5"><?php echo htmlspecialchars($swag['description']); ?></p>
+                                        <h4 class="text-sm font-bold text-slate-900 dark:text-white"><?php echo htmlspecialchars($swag['name'] ?? ''); ?></h4>
+                                        <p class="text-xs font-black uppercase text-purple-600 dark:text-purple-400">⚡ <?php echo number_format($swag['points'] ?? 0, 2); ?> PTS • Stock: <?php echo intval($swag['stock'] ?? 0); ?></p>
+                                        <p class="text-[10px] text-slate-500 font-medium line-clamp-1 mt-0.5"><?php echo htmlspecialchars($swag['description'] ?? ''); ?></p>
                                     </div>
                                 </div>
                                 
@@ -911,11 +984,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                                     <!-- Edit Swag Button -->
                                     <button type="button" 
                                             data-id="<?php echo $swag['id']; ?>" 
-                                            data-name="<?php echo htmlspecialchars($swag['name'], ENT_QUOTES, 'UTF-8'); ?>" 
-                                            data-pts="<?php echo floatval($swag['points']); ?>" 
-                                            data-stock="<?php echo intval($swag['stock']); ?>" 
-                                            data-desc="<?php echo htmlspecialchars($swag['description'], ENT_QUOTES, 'UTF-8'); ?>" 
-                                            data-img="<?php echo htmlspecialchars($swag['image'], ENT_QUOTES, 'UTF-8'); ?>" 
+                                            data-name="<?php echo htmlspecialchars($swag['name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" 
+                                            data-pts="<?php echo floatval($swag['points'] ?? 0); ?>" 
+                                            data-stock="<?php echo intval($swag['stock'] ?? 0); ?>" 
+                                            data-desc="<?php echo htmlspecialchars($swag['description'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" 
+                                            data-img="<?php echo htmlspecialchars($swag['image'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" 
                                             onclick="openEditSwagModal(this)" 
                                             class="rounded-full bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20 px-3.5 py-1.5 text-[9px] font-black uppercase tracking-widest text-slate-700 dark:text-zinc-350 cursor-pointer">
                                         Edit
@@ -994,27 +1067,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                             <!-- Member & Swag Info -->
                             <div class="flex flex-wrap items-center gap-4">
                                 <div class="flex items-center gap-3">
-                                    <img src="<?php echo $req['member_image'] ?: 'public/images/AWS-MembersPics/default.png'; ?>" class="h-10 w-10 rounded-xl object-cover border border-slate-200 dark:border-white/10">
+                                    <img src="<?php echo (!empty($req['member_image']) ? htmlspecialchars($req['member_image']) : 'public/images/AWS-MembersPics/default.png'); ?>" class="h-10 w-10 rounded-xl object-cover border border-slate-200 dark:border-white/10">
                                     <div>
-                                        <p class="text-sm font-bold text-slate-900 dark:text-white"><?php echo htmlspecialchars($req['member_name']); ?></p>
-                                        <p class="text-[9px] font-black uppercase text-purple-400">Bal: <?php echo number_format($req['member_current_points'], 2); ?> PTS</p>
+                                        <div class="flex items-center gap-2">
+                                            <p class="text-sm font-bold text-slate-900 dark:text-white"><?php echo htmlspecialchars($req['member_name'] ?? ''); ?></p>
+                                            <span class="rounded bg-purple-500/10 border border-purple-500/20 px-1.5 py-0.5 text-[9px] font-mono font-bold text-purple-400">
+                                                ID: <?php echo htmlspecialchars($req['member_code'] ?? ('SBG-' . sprintf('%03d', $req['member_id']))); ?>
+                                            </span>
+                                        </div>
+                                        <p class="text-[9px] font-black uppercase text-purple-400">Bal: <?php echo number_format($req['member_current_points'] ?? 0, 2); ?> PTS</p>
                                     </div>
                                 </div>
 
                                 <div class="text-slate-400 hidden sm:block">➜</div>
 
                                 <div class="flex items-center gap-3">
-                                    <img src="<?php echo htmlspecialchars($req['swag_image']); ?>" class="h-10 w-10 rounded-xl object-contain bg-white/10 p-1">
+                                    <img src="<?php echo htmlspecialchars($req['swag_image'] ?? ''); ?>" class="h-10 w-10 rounded-xl object-contain bg-white/10 p-1">
                                     <div>
-                                        <p class="text-sm font-bold text-slate-900 dark:text-white"><?php echo htmlspecialchars($req['swag_name']); ?></p>
-                                        <p class="text-[9px] font-black uppercase text-amber-500">Requires: <?php echo number_format($req['points_spent'], 2); ?> PTS</p>
+                                        <p class="text-sm font-bold text-slate-900 dark:text-white"><?php echo htmlspecialchars($req['swag_name'] ?? ''); ?></p>
+                                        <p class="text-[9px] font-black uppercase text-amber-500">Requires: <?php echo number_format($req['points_spent'] ?? 0, 2); ?> PTS</p>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Actions -->
                             <div class="flex items-center gap-2 shrink-0">
-                                <form action="admin.php" method="POST" onsubmit="return confirm('Fulfill request? This will deduct <?php echo number_format($req['points_spent'], 2); ?> PTS from <?php echo htmlspecialchars(addslashes($req['member_name'])); ?>.');">
+                                <form action="admin.php" method="POST" onsubmit="return confirm('Fulfill request? This will deduct <?php echo number_format($req['points_spent'] ?? 0, 2); ?> PTS from <?php echo htmlspecialchars(addslashes($req['member_name'] ?? '')); ?>.');">
                                     <input type="hidden" name="action" value="fulfill_swag_request">
                                     <input type="hidden" name="request_id" value="<?php echo $req['id']; ?>">
                                     <button type="submit" class="rounded-full bg-emerald-600 hover:bg-emerald-500 px-4 py-2 text-[10px] font-black uppercase tracking-wider text-white shadow-md shadow-emerald-600/20 cursor-pointer">
@@ -1041,7 +1119,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             <h3 class="text-lg font-black text-slate-900 dark:text-white font-space mb-4">Swag Claim Requests History</h3>
 
             <?php 
-            $history_requests = array_filter($swag_requests, function($r) { return $r['status'] !== 'pending'; });
+            $history_requests = array_filter($swag_requests ?? [], function($r) { return ($r['status'] ?? '') !== 'pending'; });
             ?>
 
             <div class="space-y-3 max-h-[400px] overflow-y-auto pr-2 no-scrollbar">
@@ -1051,13 +1129,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     <?php foreach ($history_requests as $req): ?>
                         <div class="flex items-center justify-between gap-4 rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.01] p-3 text-xs">
                             <div class="flex items-center gap-3">
-                                <span class="font-bold text-slate-900 dark:text-white"><?php echo htmlspecialchars($req['member_name']); ?></span>
+                                <span class="font-bold text-slate-900 dark:text-white"><?php echo htmlspecialchars($req['member_name'] ?? ''); ?></span>
+                                <span class="rounded bg-purple-500/10 border border-purple-500/20 px-1.5 py-0.5 text-[8px] font-mono text-purple-400">
+                                    ID: <?php echo htmlspecialchars($req['member_code'] ?? ('SBG-' . sprintf('%03d', $req['member_id']))); ?>
+                                </span>
                                 <span class="text-slate-400">claimed</span>
-                                <span class="font-bold text-purple-400"><?php echo htmlspecialchars($req['swag_name']); ?></span>
-                                <span class="text-[10px] text-slate-500">(<?php echo number_format($req['points_spent'], 2); ?> PTS)</span>
+                                <span class="font-bold text-purple-400"><?php echo htmlspecialchars($req['swag_name'] ?? ''); ?></span>
+                                <span class="text-[10px] text-slate-500">(<?php echo number_format($req['points_spent'] ?? 0, 2); ?> PTS)</span>
                             </div>
-                            <span class="rounded-full px-3 py-1 text-[9px] font-black uppercase tracking-wider <?php echo $req['status'] === 'fulfilled' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'; ?>">
-                                <?php echo ucfirst($req['status']); ?>
+                            <span class="rounded-full px-3 py-1 text-[9px] font-black uppercase tracking-wider <?php echo ($req['status'] ?? '') === 'fulfilled' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'; ?>">
+                                <?php echo ucfirst($req['status'] ?? ''); ?>
                             </span>
                         </div>
                     <?php endforeach; ?>
@@ -1079,32 +1160,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     <input type="hidden" name="member_id" id="individual-delete-member-id">
 </form>
 
-<!-- Degrade Status Modal overlay -->
+<!-- Edit Builder Profile & Credentials Modal overlay -->
 <div id="degrade-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity duration-300">
     <div class="w-full max-w-md rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0c0817] p-6 shadow-2xl relative text-left">
-        <h3 class="text-lg font-black text-slate-900 dark:text-white font-space mb-4">Edit Builder Status</h3>
+        <h3 class="text-lg font-black text-slate-900 dark:text-white font-space mb-4">Edit Builder Profile & Credentials</h3>
         <form action="admin.php" method="POST" class="space-y-4">
-            <input type="hidden" name="action" value="degrade_member">
+            <input type="hidden" name="action" value="edit_builder">
             <input type="hidden" name="member_id" id="degrade-member-id">
             
             <div>
-                <label class="block text-[9px] font-black uppercase text-slate-500 tracking-wider mb-1">Level Tier</label>
-                <select name="level" id="degrade-level" class="form-input w-full rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0d0a15] px-4 py-2.5 text-xs text-slate-900 dark:text-white outline-none focus:border-purple-500">
-                    <option value="Lead">Lead</option>
-                    <option value="Core">Core</option>
-                    <option value="Developer">Developer</option>
-                    <option value="Builder">Builder</option>
-                </select>
+                <label class="block text-[9px] font-black uppercase text-slate-500 tracking-wider mb-1">Builder Full Name</label>
+                <input type="text" name="name" id="degrade-name" required class="form-input w-full rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-4 py-2.5 text-xs text-slate-900 dark:text-white outline-none focus:border-purple-500">
             </div>
-            
+
+            <div>
+                <label class="block text-[9px] font-black uppercase text-slate-500 tracking-wider mb-1">Member ID (Login ID)</label>
+                <input type="text" name="member_code" id="degrade-code" required class="form-input w-full rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-4 py-2.5 text-xs text-slate-900 dark:text-white outline-none focus:border-purple-500 font-mono">
+            </div>
+
             <div>
                 <label class="block text-[9px] font-black uppercase text-slate-500 tracking-wider mb-1">Role Title</label>
                 <input type="text" name="role" id="degrade-role" required class="form-input w-full rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-4 py-2.5 text-xs text-slate-900 dark:text-white outline-none focus:border-purple-500">
             </div>
 
+            <div>
+                <label class="block text-[9px] font-black uppercase text-slate-500 tracking-wider mb-1">Level Tier</label>
+                <select name="level" id="degrade-level" class="form-input w-full rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0d0a15] px-4 py-2.5 text-xs text-slate-900 dark:text-white outline-none focus:border-purple-500">
+                    <option value="Core Team">Core Team</option>
+                    <option value="Directorate">Directorate</option>
+                    <option value="Manager">Manager</option>
+                    <option value="Lead">Lead</option>
+                    <option value="Member">Member</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-[9px] font-black uppercase text-slate-500 tracking-wider mb-1">Set / Reset Password</label>
+                <input type="password" name="new_password" id="degrade-password" placeholder="Leave empty to keep current password" class="form-input w-full rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-4 py-2.5 text-xs text-slate-900 dark:text-white outline-none focus:border-purple-500">
+            </div>
+
             <div class="flex gap-2.5 pt-2">
                 <button type="submit" class="flex-grow rounded-full bg-purple-600 hover:bg-purple-500 py-2.5 text-xs font-black uppercase tracking-wider text-white transition-all cursor-pointer">
-                    Apply Status Changes
+                    Save Builder Profile Changes
                 </button>
                 <button type="button" onclick="closeDegradeModal()" class="rounded-full border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-zinc-400 text-center cursor-pointer">
                     Cancel
@@ -1163,10 +1260,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 <script>
 // Switch tabs logic
 function switchTab(tabId) {
-    // Hide all tab content
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-    // Show active tab content
-    document.getElementById(tabId).classList.remove('hidden');
+    const targetContent = document.getElementById(tabId);
+    if (!targetContent) return;
+
+    try {
+        localStorage.setItem('admin_active_tab', tabId);
+    } catch (e) {}
+
+    // Hide all tab content elements explicitly
+    document.querySelectorAll('.tab-content').forEach(el => {
+        el.style.setProperty('display', 'none', 'important');
+        el.classList.add('hidden');
+    });
+
+    // Display target element explicitly
+    targetContent.style.setProperty('display', 'block', 'important');
+    targetContent.classList.remove('hidden');
 
     // Reset all tab button styles
     document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -1176,9 +1285,36 @@ function switchTab(tabId) {
 
     // Set active style on current tab button
     const activeBtn = document.getElementById(tabId + '-btn');
-    activeBtn.classList.add('active-tab', 'text-purple-600', 'dark:text-purple-400', 'font-black');
-    activeBtn.classList.remove('text-slate-500', 'dark:text-zinc-400');
+    if (activeBtn) {
+        activeBtn.classList.add('active-tab', 'text-purple-600', 'dark:text-purple-400', 'font-black');
+        activeBtn.classList.remove('text-slate-500', 'dark:text-zinc-400');
+    }
 }
+window.switchTab = switchTab;
+
+// Bind listeners and handle tab restoration
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const tabId = btn.getAttribute('data-tab');
+            if (tabId) {
+                switchTab(tabId);
+            }
+        });
+    });
+
+    try {
+        const savedTab = localStorage.getItem('admin_active_tab');
+        if (savedTab && document.getElementById(savedTab)) {
+            switchTab(savedTab);
+        } else {
+            switchTab('members-tab');
+        }
+    } catch (e) {
+        switchTab('members-tab');
+    }
+});
 
 // Client filtering of members names
 const memberFilterInput = document.getElementById('member-filter');
@@ -1196,22 +1332,40 @@ if (memberFilterInput) {
     });
 }
 
-// Degradation Status Modal updated to extract from data-* attributes of clicked button
+// Edit Builder Profile & Credentials Modal
 function toggleDegradeModal(btn) {
     const memberId = btn.getAttribute('data-id');
+    const memberCode = btn.getAttribute('data-code');
+    const memberName = btn.getAttribute('data-name');
     const currentLevel = btn.getAttribute('data-level');
     const currentRole = btn.getAttribute('data-role');
     
     document.getElementById('degrade-member-id').value = memberId;
-    document.getElementById('degrade-level').value = currentLevel;
-    document.getElementById('degrade-role').value = currentRole;
+    if (document.getElementById('degrade-code')) {
+        document.getElementById('degrade-code').value = memberCode || '';
+    }
+    if (document.getElementById('degrade-name')) {
+        document.getElementById('degrade-name').value = memberName || '';
+    }
+    if (document.getElementById('degrade-level')) {
+        document.getElementById('degrade-level').value = currentLevel || 'Member';
+    }
+    if (document.getElementById('degrade-role')) {
+        document.getElementById('degrade-role').value = currentRole || '';
+    }
+    if (document.getElementById('degrade-password')) {
+        document.getElementById('degrade-password').value = '';
+    }
     
     const modal = document.getElementById('degrade-modal');
+    modal.style.display = 'flex';
     modal.classList.remove('hidden');
 }
 
 function closeDegradeModal() {
-    document.getElementById('degrade-modal').classList.add('hidden');
+    const modal = document.getElementById('degrade-modal');
+    modal.style.display = 'none';
+    modal.classList.add('hidden');
 }
 
 // Single member points update handler
@@ -1230,7 +1384,7 @@ function submitIndividualDelete(memberId, name) {
     }
 }
 
-// Select All members logic (only selects visible members if filtered)
+// Select All members logic
 const selectAllCheckbox = document.getElementById('select-all-members');
 if (selectAllCheckbox) {
     selectAllCheckbox.addEventListener('change', (e) => {
@@ -1242,6 +1396,8 @@ if (selectAllCheckbox) {
             }
         });
     });
+}
+
 // Edit Swag Modal Handlers
 function openEditSwagModal(btn) {
     document.getElementById('edit-swag-id').value = btn.getAttribute('data-id');
@@ -1250,16 +1406,23 @@ function openEditSwagModal(btn) {
     document.getElementById('edit-swag-stock').value = btn.getAttribute('data-stock');
     document.getElementById('edit-swag-desc').value = btn.getAttribute('data-desc');
 
-    document.getElementById('edit-swag-modal').classList.remove('hidden');
+    const modal = document.getElementById('edit-swag-modal');
+    modal.style.display = 'flex';
+    modal.classList.remove('hidden');
 }
 
 function closeEditSwagModal() {
-    document.getElementById('edit-swag-modal').classList.add('hidden');
+    const modal = document.getElementById('edit-swag-modal');
+    modal.style.display = 'none';
+    modal.classList.add('hidden');
 }
 
 // Active Tab buttons styling injected via class
 const style = document.createElement('style');
 style.textContent = `
+    .hidden {
+        display: none !important;
+    }
     .active-tab {
         background: rgba(147, 51, 234, 0.1) !important;
         border: 1px solid rgba(147, 51, 234, 0.25) !important;
