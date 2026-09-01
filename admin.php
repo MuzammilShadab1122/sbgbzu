@@ -896,8 +896,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         <?php foreach ($partners as $partner): ?>
                             <div class="flex items-center justify-between gap-4 rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.01] p-4 text-left">
                                 <div class="flex items-center gap-4">
-                                    <div class="w-12 h-12 flex items-center justify-center shrink-0 border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 rounded-xl overflow-hidden p-1.5">
-                                        <img src="<?php echo htmlspecialchars($partner['logo']); ?>" alt="" class="w-full h-full object-contain">
+                                    <div class="w-14 h-14 flex items-center justify-center shrink-0 border border-slate-200 dark:border-white/20 bg-white dark:bg-white rounded-2xl overflow-hidden p-2 shadow-sm">
+                                        <img src="<?php echo htmlspecialchars($partner['logo']); ?>" alt="" class="max-w-full max-h-full object-contain">
                                     </div>
                                     <div>
                                         <h4 class="text-sm font-bold text-slate-900 dark:text-white"><?php echo htmlspecialchars($partner['name']); ?></h4>

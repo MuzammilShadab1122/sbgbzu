@@ -292,6 +292,17 @@ if ($current_page === 'index') {
             animation: marquee 20s linear infinite;
         }
         
+        /* Global strict prevention of horizontal scrolling */
+        html, body {
+            overflow-x: hidden !important;
+            max-width: 100vw;
+            width: 100%;
+            position: relative;
+        }
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
         /* Smooth touch-scrolling settings */
         .no-scrollbar::-webkit-scrollbar {
             display: none;
@@ -302,12 +313,14 @@ if ($current_page === 'index') {
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 dark:bg-[#03000a] dark:text-slate-100 transition-colors duration-300 min-h-screen flex flex-col font-sans pb-24 lg:pb-0">
+<body class="bg-slate-50 text-slate-800 dark:bg-[#03000a] dark:text-slate-100 transition-colors duration-300 min-h-screen flex flex-col font-sans pb-24 lg:pb-0 overflow-x-hidden relative w-full">
 
-    <!-- GLOBAL AMBIENT GLOWS -->
-    <div class="pointer-events-none absolute left-0 top-0 z-0 h-[600px] w-full bg-gradient-to-b from-purple-900/10 via-transparent to-transparent opacity-60 dark:opacity-100"></div>
-    <div class="pointer-events-none absolute -left-32 top-32 z-0 h-[300px] w-[300px] rounded-full bg-purple-600/5 dark:bg-purple-600/10 blur-3xl animate-pulse"></div>
-    <div class="pointer-events-none absolute -right-32 top-96 z-0 h-[300px] w-[300px] rounded-full bg-fuchsia-600/5 dark:bg-fuchsia-600/10 blur-3xl animate-pulse" style="animation-delay: 2s;"></div>
+    <!-- GLOBAL AMBIENT GLOWS (ISOLATED IN OVERFLOW-HIDDEN CONTAINER TO PREVENT HORIZONTAL SCROLL) -->
+    <div class="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+        <div class="absolute left-0 top-0 h-[600px] w-full bg-gradient-to-b from-purple-900/10 via-transparent to-transparent opacity-60 dark:opacity-100"></div>
+        <div class="absolute -left-32 top-32 h-[300px] w-[300px] rounded-full bg-purple-600/5 dark:bg-purple-600/10 blur-3xl animate-pulse"></div>
+        <div class="absolute -right-32 top-96 h-[300px] w-[300px] rounded-full bg-fuchsia-600/5 dark:bg-fuchsia-600/10 blur-3xl animate-pulse" style="animation-delay: 2s;"></div>
+    </div>
 
     <!-- TOP NAV (DESKTOP) -->
     <header class="fixed inset-x-0 top-0 z-40 px-4 py-3 lg:px-8 pointer-events-none">
@@ -387,7 +400,7 @@ if ($current_page === 'index') {
     <div class="fixed bottom-4 inset-x-4 z-50 lg:hidden rounded-3xl bg-white/95 dark:bg-[#07040f]/90 border border-slate-200 dark:border-white/10 backdrop-blur-xl flex justify-around items-center py-3 px-2 shadow-2xl dark:shadow-purple-900/10">
         
         <!-- Home -->
-        <a href="index.php" class="flex flex-col items-center gap-1 transition-all duration-200 <?php echo $current_page === 'home' ? 'text-purple-600 dark:text-purple-400 scale-105' : 'text-slate-500 dark:text-zinc-500 hover:text-purple-600 dark:hover:text-purple-400'; ?>">
+        <a href="index.php" class="flex flex-col items-center gap-1 transition-all duration-200 <?php echo $current_page === 'home' ? 'text-purple-600 dark:text-purple-400 scale-105' : 'text-slate-600 dark:text-zinc-300 hover:text-purple-600 dark:hover:text-purple-400'; ?>">
             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
             </svg>
@@ -395,7 +408,7 @@ if ($current_page === 'index') {
         </a>
 
         <!-- Teams -->
-        <a href="team.php" class="flex flex-col items-center gap-1 transition-all duration-200 <?php echo $current_page === 'team' ? 'text-purple-600 dark:text-purple-400 scale-105' : 'text-slate-500 dark:text-zinc-500 hover:text-purple-600 dark:hover:text-purple-400'; ?>">
+        <a href="team.php" class="flex flex-col items-center gap-1 transition-all duration-200 <?php echo $current_page === 'team' ? 'text-purple-600 dark:text-purple-400 scale-105' : 'text-slate-600 dark:text-zinc-300 hover:text-purple-600 dark:hover:text-purple-400'; ?>">
             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
@@ -403,7 +416,7 @@ if ($current_page === 'index') {
         </a>
 
         <!-- Store -->
-        <a href="store.php" class="flex flex-col items-center gap-1 transition-all duration-200 <?php echo $current_page === 'store' ? 'text-purple-600 dark:text-purple-400 scale-105' : 'text-slate-500 dark:text-zinc-500 hover:text-purple-600 dark:hover:text-purple-400'; ?>">
+        <a href="store.php" class="flex flex-col items-center gap-1 transition-all duration-200 <?php echo $current_page === 'store' ? 'text-purple-600 dark:text-purple-400 scale-105' : 'text-slate-600 dark:text-zinc-300 hover:text-purple-600 dark:hover:text-purple-400'; ?>">
             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
             </svg>
@@ -411,7 +424,7 @@ if ($current_page === 'index') {
         </a>
 
         <!-- Leaderboard -->
-        <a href="leaderboard.php" class="flex flex-col items-center gap-1 transition-all duration-200 <?php echo $current_page === 'leaderboard' ? 'text-purple-600 dark:text-purple-400 scale-105' : 'text-slate-500 dark:text-zinc-500 hover:text-purple-600 dark:hover:text-purple-400'; ?>">
+        <a href="leaderboard.php" class="flex flex-col items-center gap-1 transition-all duration-200 <?php echo $current_page === 'leaderboard' ? 'text-purple-600 dark:text-purple-400 scale-105' : 'text-slate-600 dark:text-zinc-300 hover:text-purple-600 dark:hover:text-purple-400'; ?>">
             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 00.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
             </svg>
@@ -419,7 +432,7 @@ if ($current_page === 'index') {
         </a>
 
         <!-- Events -->
-        <a href="events.php" class="flex flex-col items-center gap-1 transition-all duration-200 <?php echo $current_page === 'events' ? 'text-purple-600 dark:text-purple-400 scale-105' : 'text-slate-500 dark:text-zinc-500 hover:text-purple-600 dark:hover:text-purple-400'; ?>">
+        <a href="events.php" class="flex flex-col items-center gap-1 transition-all duration-200 <?php echo $current_page === 'events' ? 'text-purple-600 dark:text-purple-400 scale-105' : 'text-slate-600 dark:text-zinc-300 hover:text-purple-600 dark:hover:text-purple-400'; ?>">
             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
@@ -427,7 +440,7 @@ if ($current_page === 'index') {
         </a>
 
         <!-- Blog -->
-        <a href="blog.php" class="flex flex-col items-center gap-1 transition-all duration-200 <?php echo $current_page === 'blog' ? 'text-purple-600 dark:text-purple-400 scale-105' : 'text-slate-500 dark:text-zinc-500 hover:text-purple-600 dark:hover:text-purple-400'; ?>">
+        <a href="blog.php" class="flex flex-col items-center gap-1 transition-all duration-200 <?php echo $current_page === 'blog' ? 'text-purple-600 dark:text-purple-400 scale-105' : 'text-slate-600 dark:text-zinc-300 hover:text-purple-600 dark:hover:text-purple-400'; ?>">
             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1M19 20a2 2 0 002-2V8a2 2 0 00-2-2h-5a2 2 0 00-2 2v3m9 11h-9" />
             </svg>

@@ -408,7 +408,7 @@ $stat_rows = [
                 foreach ($marquee_loop as $partner):
                 ?>
                     <div class="flex items-center gap-4 rounded-3xl border border-slate-200 dark:border-white/10 bg-white/90 dark:bg-white/[0.03] px-6 py-4 min-w-[280px] sm:min-w-[320px] shrink-0 shadow-md backdrop-blur-md hover:border-purple-500/40 transition-all">
-                        <div class="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-white dark:bg-white/10 p-2 flex items-center justify-center shrink-0 border border-slate-200/80 dark:border-white/10 shadow-inner">
+                        <div class="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-white dark:bg-white p-2 flex items-center justify-center shrink-0 border border-slate-200/80 dark:border-white/20 shadow-sm">
                             <img src="<?php echo htmlspecialchars($partner['logo']); ?>" alt="<?php echo htmlspecialchars($partner['name']); ?>" class="max-h-full max-w-full object-contain">
                         </div>
                         <div class="min-w-0">
