@@ -1,0 +1,31 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /home/ubuntu/sbgbzu
+            git pull origin main
+            sudo cp -r /home/ubuntu/sbgbzu/* /var/www/sbg/
+            sudo chown -R www-data:www-data /var/www/sbg
+            sudo find /var/www/sbg -type d -exec chmod 755 {} \;
+            sudo find /var/www/sbg -type f -exec chmod 644 {} \;
+            sudo systemctl restart php8.5-fpm
+            sudo systemctl restart nginx
+            echo "Deployment complete"
