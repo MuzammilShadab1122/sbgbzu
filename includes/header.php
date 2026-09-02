@@ -181,6 +181,22 @@ if ($current_page === 'index') {
             background: linear-gradient(135deg, rgba(180, 83, 9, 0.03) 0%, rgba(0, 0, 0, 0.2) 100%);
         }
 
+        .tier-platinum {
+            border: 1px solid rgba(6, 182, 212, 0.35);
+            box-shadow: 0 0 25px rgba(6, 182, 212, 0.12);
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.04) 0%, rgba(99, 102, 241, 0.02) 100%);
+        }
+        .dark .tier-platinum {
+            border: 1px solid rgba(6, 182, 212, 0.55);
+            box-shadow: 0 0 30px rgba(6, 182, 212, 0.2);
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(15, 23, 42, 0.5) 100%);
+        }
+        .tier-platinum:hover {
+            border-color: rgba(6, 182, 212, 0.85) !important;
+            box-shadow: 0 15px 35px -5px rgba(6, 182, 212, 0.35) !important;
+            transform: translateY(-4px);
+        }
+
         /* Tier hover interactions */
         .tier-gold:hover {
             border-color: rgba(245, 158, 11, 0.75) !important;
@@ -200,15 +216,30 @@ if ($current_page === 'index') {
 
         /* Card Interactive Hover Effect */
         .hover-glow-card {
-            transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), border-color 0.3s ease, box-shadow 0.3s ease;
+            will-change: transform;
         }
         .hover-glow-card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-4px);
             border-color: rgba(168, 85, 247, 0.45) !important;
             box-shadow: 0 15px 35px -10px rgba(168, 85, 247, 0.35) !important;
         }
         .light .hover-glow-card:hover {
             box-shadow: 0 15px 35px -10px rgba(139, 92, 246, 0.22) !important;
+        }
+
+        /* Select and Option Dark Mode Visibility Fix */
+        select {
+            color-scheme: light dark;
+        }
+        select option {
+            background-color: #ffffff;
+            color: #0f172a;
+        }
+        .dark select option,
+        html.dark select option {
+            background-color: #0d0a15 !important;
+            color: #f8fafc !important;
         }
 
         /* Reflective swipe-shine highlight */
@@ -348,7 +379,7 @@ if ($current_page === 'index') {
                     'home' => ['label' => 'Home', 'link' => 'index.php'],
                     'team' => ['label' => 'Teams', 'link' => 'team.php'],
                     'leaderboard' => ['label' => 'Leaderboard', 'link' => 'leaderboard.php'],
-                    'store' => ['label' => 'Store 🎁', 'link' => 'store.php'],
+                    'store' => ['label' => 'Store', 'link' => 'store.php'],
                     'events' => ['label' => 'Events', 'link' => 'events.php'],
                     'blog' => ['label' => 'Blog', 'link' => 'blog.php'],
                 ];
@@ -373,8 +404,9 @@ if ($current_page === 'index') {
 
             <!-- Actions (Theme Toggle & Sign In / Sign Out) -->
             <div class="flex items-center gap-2.5">
-                <button id="theme-toggle" class="cursor-pointer rounded-full border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-zinc-350 hover:bg-slate-200 dark:hover:bg-white/10 transition-all">
-                    ☀️ Light
+                <button id="theme-toggle" class="cursor-pointer inline-flex items-center gap-1.5 rounded-full border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 px-3.5 py-2 text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-zinc-300 hover:bg-slate-200 dark:hover:bg-white/10 transition-all">
+                    <svg class="h-3.5 w-3.5 theme-icon text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                    <span class="theme-text">Light</span>
                 </button>
 
                 <?php if (is_admin() || is_member() || (isset($_SESSION['role']) && in_array($_SESSION['role'], ['admin', 'member']))): ?>
@@ -455,7 +487,7 @@ if ($current_page === 'index') {
         <div class="mx-auto max-w-[1440px] px-4 sm:px-6 pt-4">
             <div class="rounded-2xl border border-slate-200 dark:border-white/5 bg-white/70 dark:bg-white/[0.01] px-4 py-3 flex items-center justify-between gap-4 backdrop-blur-md shadow-sm">
                 <div class="flex items-center gap-2.5">
-                    <span class="text-base animate-float">⚡</span>
+                    <svg class="h-4 w-4 text-purple-500 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
                     <span id="local-greet" data-user="<?php echo is_admin() ? 'Chapter Lead' : (is_member() ? htmlspecialchars($_SESSION['member_name'] ?? '') : ''); ?>" class="text-[10px] font-black uppercase tracking-widest text-purple-600 dark:text-purple-300">
                         Hello, Builder!
                     </span>

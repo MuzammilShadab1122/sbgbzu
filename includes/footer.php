@@ -20,8 +20,8 @@
                 
                 <!-- Brand Profile -->
                 <div class="md:col-span-2">
-                    <div class="flex items-center gap-3.5">
-                        <img src="public/images/sbg-logo.png" alt="AWS SBG BZU logo" class="h-13 w-13 rounded-full object-cover ring-2 ring-purple-500/20 shadow-md">
+                    <div class="flex items-center gap-4">
+                        <img src="public/images/sbg-logo.png" alt="AWS SBG BZU logo" class="w-[100px] h-[100px] rounded-full object-cover shrink-0 ring-2 ring-purple-500/20 shadow-md" style="width: 100px; height: 100px;">
                         <div>
                             <p class="text-base font-black tracking-tight text-slate-900 dark:text-white">
                                 AWS Student Builder Group BZU
@@ -79,7 +79,7 @@
             <!-- Bottom Credits -->
             <div class="mt-12 pt-8 border-t border-slate-200 dark:border-white/5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between text-xs text-slate-500">
                 <p>© 2026 AWS Student Builder Group, BZU Multan. All rights reserved.</p>
-                <p>Designed & Developed with ❤️ by <a href="team.php" class="text-purple-600 dark:text-purple-400 hover:underline">Technical Team</a>.</p>
+                <p>Designed & Developed with <svg class="inline-block h-3.5 w-3.5 text-rose-500 fill-current -mt-0.5" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg> by <a href="team.php" class="text-purple-600 dark:text-purple-400 hover:underline">Technical Team</a>.</p>
             </div>
         </div>
     </footer>
@@ -94,64 +94,65 @@
             <!-- Background Radial Glow -->
             <div class="pointer-events-none absolute -inset-32 opacity-35 bg-[radial-gradient(circle_at_center,rgba(139,92,246,0.2),transparent_65%)]"></div>
 
-            <!-- Close button -->
+            <!-- Close Button -->
             <button id="modal-close" class="absolute right-4 top-4 text-slate-400 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white bg-slate-100 dark:bg-white/5 rounded-full p-2 border border-slate-200 dark:border-white/10 cursor-pointer">
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
             </button>
 
-            <!-- Modal Content Grid -->
-            <div class="relative z-10 flex flex-col md:flex-row gap-6 items-center md:items-start text-center md:text-left">
-                <!-- Avatar block -->
-                <div class="relative group">
-                    <img id="modal-img" src="" alt="" class="h-32 w-32 md:h-40 md:w-40 rounded-3xl object-cover border border-slate-200 dark:border-white/10 shadow-lg">
-                    <span id="modal-rank-badge" class="absolute -bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-amber-500 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-black shadow-md whitespace-nowrap">
-                        Rank #--
-                    </span>
-                </div>
-
-                <!-- Info detail block -->
-                <div class="flex-1 min-w-0">
-                    <div class="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-2">
+            <div class="flex flex-col md:flex-row gap-6 items-center md:items-start text-center md:text-left relative z-10">
+                <!-- Avatar & Badges -->
+                <div class="shrink-0 flex flex-col items-center">
+                    <div class="relative">
+                        <img id="modal-img" src="" alt="" class="h-32 w-32 md:h-40 md:w-40 rounded-3xl object-cover border border-slate-200 dark:border-white/10 shadow-lg">
+                        <span id="modal-rank-badge" class="absolute -bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-amber-500 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-black shadow-md whitespace-nowrap">
+                            Rank #0
+                        </span>
+                    </div>
+                    
+                    <div class="mt-6 flex flex-wrap gap-1.5 justify-center">
                         <span id="modal-team" class="rounded-full bg-purple-500/10 border border-purple-500/20 px-3 py-1 text-[9px] font-black uppercase tracking-widest text-purple-600 dark:text-purple-300">
                             Team
                         </span>
                         <span id="modal-level" class="rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 px-3 py-1 text-[9px] font-black uppercase tracking-widest text-slate-700 dark:text-white/80">
-                            Level
+                            Role
                         </span>
                         <span id="modal-campus" class="rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 px-3 py-1 text-[9px] font-black uppercase tracking-widest text-slate-700 dark:text-white/80">
-                            Campus
+                            BZU
                         </span>
                     </div>
+                </div>
 
-                    <h3 id="modal-name" class="text-3xl font-black tracking-tight mb-1 text-slate-900 dark:text-white">
-                        Member Name
+                <!-- Info Body -->
+                <div class="flex-grow min-w-0">
+                    <h3 id="modal-name" class="text-3xl font-black tracking-tight mb-1 text-slate-900 dark:text-white font-space">
+                        Builder Name
                     </h3>
-                    <p id="modal-role" class="text-purple-600 dark:text-purple-300 text-sm font-semibold mb-5">
-                        Role
+                    <p id="modal-role" class="text-purple-600 dark:text-purple-300 text-sm font-semibold mb-5 font-space">
+                        Member Role
                     </p>
 
-                    <!-- Stat columns -->
-                    <div class="grid grid-cols-2 gap-4 border-y border-slate-200 dark:border-white/5 py-4 mb-5">
-                        <div>
-                            <span class="block text-[9px] font-black uppercase tracking-widest text-slate-500">Total Contribution</span>
+                    <!-- Stats Grid -->
+                    <div class="grid grid-cols-2 gap-3 mb-5">
+                        <div class="rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.02] p-3">
+                            <span class="block text-[9px] font-black uppercase tracking-widest text-slate-400">Total Contribution</span>
                             <span class="text-2xl font-black text-slate-900 dark:text-white"><span id="modal-points">0.0</span> <span class="text-xs text-purple-600 dark:text-purple-400">PTS</span></span>
                         </div>
-                        <div>
-                            <span class="block text-[9px] font-black uppercase tracking-widest text-slate-500">Activity Status</span>
-                            <span class="text-base font-bold text-emerald-600 dark:text-emerald-450 flex items-center justify-center md:justify-start gap-1.5 mt-1">
-                                <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <div class="rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.02] p-3">
+                            <span class="block text-[9px] font-black uppercase tracking-widest text-slate-400">Activity Status</span>
+                            <span class="text-base font-bold text-emerald-500 flex items-center gap-1.5 mt-1">
+                                <span class="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
                                 Active Builder
                             </span>
                         </div>
                     </div>
 
-                    <!-- Progression Bar to Next Tier -->
+                    <!-- Progression Bar to Next Tier (5,000 PTS Max) -->
                     <div id="modal-progression-wrapper" class="mb-5">
                         <div class="flex justify-between items-center mb-1.5 text-[9px] font-black uppercase tracking-widest text-slate-400">
-                            <span id="modal-tier-badge" class="font-extrabold text-purple-600 dark:text-purple-300">Bronze Initiate</span>
-                            <span id="modal-tier-progress-text" class="font-bold">Progress to Next Tier: --%</span>
+                            <span id="modal-tier-badge" class="font-extrabold text-purple-600 dark:text-purple-300">Bronze Member</span>
+                            <span id="modal-tier-progress-text" class="font-bold">0 / 5,000 PTS (0%)</span>
                         </div>
                         <div class="h-2 w-full rounded-full bg-slate-100 dark:bg-white/10 overflow-hidden">
                             <div id="modal-tier-progress-bar" class="h-full rounded-full bg-gradient-to-r from-purple-500 via-pink-500 to-purple-600 progress-bar-shine" style="width: 0%;"></div>

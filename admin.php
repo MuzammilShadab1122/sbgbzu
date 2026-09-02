@@ -449,28 +449,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     <!-- TAB SELECTORS -->
     <div class="flex gap-2 overflow-x-auto no-scrollbar border-b border-slate-200 dark:border-white/10 pb-2 mb-8 relative z-20">
         <button type="button" data-tab="members-tab" onclick="switchTab('members-tab')" id="members-tab-btn" class="tab-btn active-tab rounded-full px-5 py-2.5 text-[10px] font-black uppercase tracking-widest cursor-pointer relative z-20 transition-all">
-            👥 Members Directory
+            Members Directory
         </button>
         <button type="button" data-tab="badges-tab" onclick="switchTab('badges-tab')" id="badges-tab-btn" class="tab-btn rounded-full px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white cursor-pointer relative z-20 transition-all">
-            🏅 Community Badges
+            Community Badges
         </button>
         <button type="button" data-tab="partners-tab" onclick="switchTab('partners-tab')" id="partners-tab-btn" class="tab-btn rounded-full px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white cursor-pointer relative z-20 transition-all">
-            🤝 Campus Partners
+            Campus Partners
         </button>
         <button type="button" data-tab="highlights-tab" onclick="switchTab('highlights-tab')" id="highlights-tab-btn" class="tab-btn rounded-full px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white cursor-pointer relative z-20 transition-all">
-            🏆 Month Spotlights
+            Month Spotlights
         </button>
         <button type="button" data-tab="swags-tab" onclick="switchTab('swags-tab')" id="swags-tab-btn" class="tab-btn rounded-full px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white cursor-pointer relative z-20 transition-all">
-            🎁 AWS Swags Catalog
+            AWS Swags Catalog
         </button>
         <button type="button" data-tab="claims-tab" onclick="switchTab('claims-tab')" id="claims-tab-btn" class="tab-btn rounded-full px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white cursor-pointer relative z-20 transition-all">
-            🛒 Member Swag Claims
+            Member Swag Claims
         </button>
         <button type="button" data-tab="events-tab" onclick="switchTab('events-tab')" id="events-tab-btn" class="tab-btn rounded-full px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white cursor-pointer relative z-20 transition-all">
-            📅 Sessions/Gallery
+            Sessions/Gallery
         </button>
         <button type="button" data-tab="posts-tab" onclick="switchTab('posts-tab')" id="posts-tab-btn" class="tab-btn rounded-full px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white cursor-pointer relative z-20 transition-all">
-            📰 Notices & Blog
+            Notices & Blog
         </button>
     </div>
 

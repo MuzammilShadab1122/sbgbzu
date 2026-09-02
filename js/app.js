@@ -12,16 +12,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const hrs = now.getHours();
         const userName = (greetEl && greetEl.getAttribute('data-user')) ? greetEl.getAttribute('data-user') : "Builder";
         
-        // Formulate greeting string
+        // Formulate greeting string (Clean text, no emojis)
         let greetText = `Welcome to AWS SBG, ${userName}!`;
         if (hrs >= 5 && hrs < 12) {
-            greetText = `Good morning, ${userName}! ☀️`;
+            greetText = `Good morning, ${userName}!`;
         } else if (hrs >= 12 && hrs < 17) {
-            greetText = `Good afternoon, ${userName}! ⚡`;
+            greetText = `Good afternoon, ${userName}!`;
         } else if (hrs >= 17 && hrs < 22) {
-            greetText = `Good evening, ${userName}! 🌌`;
+            greetText = `Good evening, ${userName}!`;
         } else {
-            greetText = `Working late? Keep grinding, ${userName}! 🛸`;
+            greetText = `Working late? Keep grinding, ${userName}!`;
         }
 
         if (greetEl) {
@@ -45,21 +45,24 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(updateGreeting, 60000); // Update time indicator every 60s
 
     // ----------------------------------------------------
-    // 2. Theme Switcher (Dark / Light Mode)
+    // 2. Theme Switcher (Dark / Light Mode with SVG Icons)
     // ----------------------------------------------------
     const themeToggle = document.getElementById('theme-toggle');
     const rootEl = document.documentElement;
+
+    const sunIcon = `<svg class="h-3.5 w-3.5 theme-icon text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg><span class="theme-text">Light</span>`;
+    const moonIcon = `<svg class="h-3.5 w-3.5 theme-icon text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg><span class="theme-text">Dark</span>`;
 
     // Load initial theme
     const savedTheme = localStorage.getItem('theme') || 'dark';
     if (savedTheme === 'light') {
         rootEl.classList.remove('dark');
         rootEl.classList.add('light');
-        if (themeToggle) themeToggle.innerHTML = '🌙 Dark';
+        if (themeToggle) themeToggle.innerHTML = moonIcon;
     } else {
         rootEl.classList.remove('light');
         rootEl.classList.add('dark');
-        if (themeToggle) themeToggle.innerHTML = '☀️ Light';
+        if (themeToggle) themeToggle.innerHTML = sunIcon;
     }
 
     if (themeToggle) {
@@ -68,12 +71,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 rootEl.classList.remove('dark');
                 rootEl.classList.add('light');
                 localStorage.setItem('theme', 'light');
-                themeToggle.innerHTML = '🌙 Dark';
+                themeToggle.innerHTML = moonIcon;
             } else {
                 rootEl.classList.remove('light');
                 rootEl.classList.add('dark');
                 localStorage.setItem('theme', 'dark');
-                themeToggle.innerHTML = '☀️ Light';
+                themeToggle.innerHTML = sunIcon;
             }
         });
     }
@@ -176,44 +179,40 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Gamified Tier Progression calculation
+        // Gamified Tier Progression calculation (Max 5,000 PTS)
         const pts = parseFloat(points) || 0;
-        let tierLabel = "Bronze Initiate";
-        let progressPercent = 0;
-        let progressText = "";
+        const maxPts = 5000;
+        const progressPercent = Math.min(100, Math.max(0, Math.round((pts / maxPts) * 100)));
+        let tierLabel = "Bronze Member";
         let tierClass = "tier-bronze";
-        let progressBarColor = "from-orange-500 via-amber-600 to-red-500";
+        let progressBarColor = "from-amber-700 via-orange-600 to-amber-800";
+        let progressText = `${pts.toLocaleString()} / ${maxPts.toLocaleString()} PTS (${progressPercent}%)`;
 
-        if (level === 'Lead' || level === 'Core Team' || level === 'Directorate') {
-            tierLabel = `Gold Master (${level})`;
-            progressPercent = 100;
-            progressText = "Milestone Achieved";
+        if (pts >= 4000) {
+            tierLabel = "Platinum Member";
+            tierClass = "tier-platinum";
+            progressBarColor = "from-cyan-400 via-teal-300 to-indigo-500";
+            if (pts >= 5000) {
+                progressText = `${pts.toLocaleString()} / ${maxPts.toLocaleString()} PTS - Maximum Milestone Achieved!`;
+            }
+        } else if (pts >= 2500) {
+            tierLabel = "Gold Member";
             tierClass = "tier-gold";
             progressBarColor = "from-amber-500 via-yellow-400 to-amber-600";
-        } else if (pts >= 60) {
-            tierLabel = "Gold Master";
-            progressPercent = 100;
-            progressText = "Milestone Achieved";
-            tierClass = "tier-gold";
-            progressBarColor = "from-amber-500 via-yellow-400 to-amber-600";
-        } else if (pts >= 40) {
-            tierLabel = "Silver Builder";
-            progressPercent = Math.round(((pts - 40) / 20) * 100);
-            progressText = `Progress to Gold: ${progressPercent}%`;
+        } else if (pts >= 1000) {
+            tierLabel = "Silver Member";
             tierClass = "tier-silver";
-            progressBarColor = "from-slate-400 via-zinc-350 to-slate-500";
+            progressBarColor = "from-slate-300 via-slate-100 to-zinc-400";
         } else {
-            tierLabel = "Bronze Initiate";
-            progressPercent = Math.round((pts / 40) * 100);
-            progressText = `Progress to Silver: ${progressPercent}%`;
+            tierLabel = "Bronze Member";
             tierClass = "tier-bronze";
-            progressBarColor = "from-purple-500 via-pink-500 to-indigo-500";
+            progressBarColor = "from-amber-700 via-orange-600 to-amber-800";
         }
 
         // Apply tier border styling to the modal card element
         const modalContentCard = document.querySelector('#member-modal > div:nth-child(2)');
         if (modalContentCard) {
-            modalContentCard.classList.remove('tier-gold', 'tier-silver', 'tier-bronze');
+            modalContentCard.classList.remove('tier-platinum', 'tier-gold', 'tier-silver', 'tier-bronze');
             modalContentCard.classList.add(tierClass);
         }
 
@@ -225,7 +224,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (tierBadgeEl) tierBadgeEl.innerText = tierLabel;
         if (progressTextEl) progressTextEl.innerText = progressText;
         if (progressBarEl) {
-            progressBarEl.style.width = `${progressPercent}%`;
+            // Ensure minimum visual width of 2% if pts > 0
+            const visualWidth = pts > 0 ? Math.max(3, progressPercent) : 0;
+            progressBarEl.style.width = `${visualWidth}%`;
             progressBarEl.className = `h-full rounded-full bg-gradient-to-r ${progressBarColor} progress-bar-shine`;
         }
 

@@ -39,9 +39,11 @@ if (!function_exists('get_team_badge_class')) {
 if (!function_exists('get_member_tier_class')) {
     function get_member_tier_class($points) {
         $pts = floatval($points);
-        if ($pts >= 60) {
+        if ($pts >= 4000) {
+            return 'tier-platinum';
+        } elseif ($pts >= 2500) {
             return 'tier-gold';
-        } elseif ($pts >= 40) {
+        } elseif ($pts >= 1000) {
             return 'tier-silver';
         } else {
             return 'tier-bronze';
@@ -159,22 +161,25 @@ if (!function_exists('get_member_tier_class')) {
             
             $meta = $team_meta[$team_name] ?: ['title' => $team_name, 'blurb' => ''];
             
-            // Team Spotlight logic
+            // Team Spotlight logic: Leaders always display at the left side
             $spotlights = [];
             $rest = [];
             
-            if ($team_name === 'Technical') {
-                foreach ($team_members as $m) {
-                    if (in_array($m['level'], ['Lead', 'Directorate', 'Manager', 'Core Team'])) {
-                        $spotlights[] = $m;
-                    } else {
-                        $rest[] = $m;
-                    }
+            foreach ($team_members as $m) {
+                if (in_array($m['level'], ['Lead', 'Directorate', 'Manager', 'Core Team'])) {
+                    $spotlights[] = $m;
+                } else {
+                    $rest[] = $m;
                 }
-            } else {
+            }
+            
+            // Fallback: If no leader level exists, pick the top member as spotlight
+            if (empty($spotlights) && !empty($team_members)) {
                 $spotlights = array_slice($team_members, 0, 1);
                 $rest = array_slice($team_members, 1);
             }
+            
+            $num_spotlights = count($spotlights);
         ?>
             <div>
                 <!-- Header panel -->
@@ -191,11 +196,11 @@ if (!function_exists('get_member_tier_class')) {
                 </div>
 
                 <!-- Content grid layout -->
-                <div class="grid gap-6 <?php echo ($team_name === 'Technical' && count($spotlights) > 0) ? 'lg:grid-cols-3' : 'lg:grid-cols-2'; ?>">
+                <div class="grid gap-6 <?php echo ($num_spotlights > 1) ? 'lg:grid-cols-3' : 'lg:grid-cols-2'; ?>">
                     
-                    <!-- Spotlights column -->
-                    <?php if (count($spotlights) > 0): ?>
-                        <div class="<?php echo ($team_name === 'Technical' && count($spotlights) > 1) ? 'lg:col-span-2 grid gap-6 lg:grid-cols-2' : ''; ?>">
+                    <!-- Spotlights column (LEADERS ON THE LEFT) -->
+                    <?php if ($num_spotlights > 0): ?>
+                        <div class="<?php echo ($num_spotlights > 1) ? 'lg:col-span-2 grid gap-6 sm:grid-cols-2' : ''; ?>">
                             <?php foreach ($spotlights as $spot): 
                                 $tier_class = get_member_tier_class($spot['points']);
                             ?>

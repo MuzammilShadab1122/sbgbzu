@@ -40,7 +40,7 @@ foreach ($posts as $post) {
             class="rounded-full border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0d0a15] px-5 py-3 text-sm text-slate-900 dark:text-white outline-none focus:border-purple-500 focus:shadow-[0_0_15px_rgba(168,85,247,0.25)] transition-all"
         >
             <?php foreach ($categories as $cat): ?>
-                <option value="<?php echo $cat; ?>" class="text-black"><?php echo $cat; ?></option>
+                <option value="<?php echo $cat; ?>" class="bg-white text-slate-900 dark:bg-[#0d0a15] dark:text-white"><?php echo $cat; ?></option>
             <?php endforeach; ?>
         </select>
     </div>

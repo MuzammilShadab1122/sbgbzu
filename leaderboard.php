@@ -2,13 +2,8 @@
 // leaderboard.php
 require_once 'includes/header.php';
 
-// Filter out leads (leads don't compete on points rankings)
-$active_participants = [];
-foreach ($participants as $p) {
-    if ($p['level'] !== 'Lead') {
-        $active_participants[] = $p;
-    }
-}
+// Include all active participants including team leads
+$active_participants = $participants;
 
 // Sort active by points descending
 usort($active_participants, function($a, $b) {
@@ -38,7 +33,10 @@ $rest_rankings = array_slice($active_participants, 3);
     <!-- TOP 3 PODIUM (RESPONSIVE GLASS CARDS) -->
     <section class="mb-12">
         <div class="text-center mb-6">
-            <h3 class="text-[10px] font-black uppercase tracking-[0.26em] text-purple-605 dark:text-purple-400">🏆 Podium Standings</h3>
+            <h3 class="text-[10px] font-black uppercase tracking-[0.26em] text-purple-605 dark:text-purple-400 flex items-center justify-center gap-1.5">
+                <svg class="h-3.5 w-3.5 text-amber-500 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94.63 1.5 1.98 2.63 3.61 2.96V19H7v2h10v-2h-4v-3.1c1.63-.33 2.98-1.46 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"/></svg>
+                Podium Standings
+            </h3>
         </div>
         
         <!-- On mobile: vertical stack. On desktop: side-by-side with 1st place in center & scaled -->
@@ -86,8 +84,10 @@ $rest_rankings = array_slice($active_participants, 3);
                    data-img="<?php echo htmlspecialchars($p['image']); ?>"
                    data-rank="1">
                     
-                    <span class="absolute -top-4 left-1/2 -translate-x-1/2 text-xl">👑</span>
-                    <span class="absolute top-4 left-4 flex h-7 w-7 items-center justify-center rounded-full bg-amber-500 text-[10px] font-black text-black">
+                    <span class="absolute -top-3.5 left-1/2 -translate-x-1/2 flex items-center justify-center h-7 w-7 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-500 shadow-md backdrop-blur-md">
+                        <svg class="h-4 w-4 fill-current" viewBox="0 0 24 24"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/></svg>
+                    </span>
+                    <span class="absolute top-4 left-4 flex h-7 w-7 items-center justify-center rounded-full bg-amber-500 text-[10px] font-black text-black shadow-sm">
                         01
                     </span>
                     <img src="<?php echo $p['image'] ?: 'public/images/AWS-MembersPics/default.png'; ?>" class="h-20 w-20 rounded-2xl object-cover border-2 border-amber-500 shadow-lg mb-3" alt="">
@@ -155,15 +155,17 @@ $rest_rankings = array_slice($active_participants, 3);
                         $rank = $idx + 4; // Podium occupies ranks 1, 2, and 3
                         $pts = floatval($p['points']);
                         
-                        // Tier styling for row borders
-                        if ($pts >= 60) {
+                        if ($pts >= 4000) {
+                            $tier_row_class = 'border-l-4 border-l-cyan-400/80 dark:border-l-cyan-400';
+                            $rank_color = 'text-cyan-500 dark:text-cyan-400 font-black';
+                        } elseif ($pts >= 2500) {
                             $tier_row_class = 'border-l-4 border-l-amber-500/70 dark:border-l-amber-500/90';
                             $rank_color = 'text-amber-500 font-extrabold';
-                        } elseif ($pts >= 40) {
+                        } elseif ($pts >= 1000) {
                             $tier_row_class = 'border-l-4 border-l-slate-400/60 dark:border-l-slate-400/80';
                             $rank_color = 'text-slate-450 dark:text-zinc-350 font-bold';
                         } else {
-                            $tier_row_class = 'border-l-4 border-l-purple-500/20 dark:border-l-purple-900/30';
+                            $tier_row_class = 'border-l-4 border-l-amber-700/40 dark:border-l-amber-700/60';
                             $rank_color = 'text-slate-400 dark:text-zinc-550';
                         }
                         

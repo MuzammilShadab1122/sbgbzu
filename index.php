@@ -201,12 +201,15 @@ $stat_rows = [
             
             <!-- Star of the Month Card (Glow card) -->
             <div class="lg:col-span-7 rounded-3xl p-6 relative overflow-hidden flex flex-col justify-between shadow-lg tier-gold reflective-card transition-all duration-300">
-                <!-- Floating crown sticker in BG -->
-                <div class="absolute -top-4 right-4 text-3xl animate-float">👑</div>
+                <!-- Aligned crown badge in top-right corner -->
+                <div class="absolute top-5 right-5 h-10 w-10 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-500 shadow-sm flex items-center justify-center shrink-0 pointer-events-none">
+                    <svg class="h-5 w-5 fill-current" viewBox="0 0 24 24"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/></svg>
+                </div>
                 
                 <div>
                     <span class="text-[9px] font-black uppercase tracking-[0.28em] text-amber-600 dark:text-amber-400 flex items-center gap-1.5 mb-6">
-                        ★ STAR OF THE MONTH (<?php echo $highlights['monthLabel']; ?>)
+                        <svg class="h-3 w-3 fill-current text-amber-500 shrink-0" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                        STAR OF THE MONTH (<?php echo $highlights['monthLabel']; ?>)
                     </span>
                     
                     <?php if ($star_member): ?>
@@ -253,8 +256,9 @@ $stat_rows = [
             <!-- Monthly Grinders Card -->
             <div class="lg:col-span-5 rounded-3xl p-6 flex flex-col justify-between shadow-lg tier-silver reflective-card transition-all duration-300">
                 <div>
-                    <span class="text-[9px] font-black uppercase tracking-[0.28em] text-purple-600 dark:text-purple-300 block mb-5">
-                        🏆 MONTHLY GRINDERS LIST
+                    <span class="text-[9px] font-black uppercase tracking-[0.28em] text-purple-600 dark:text-purple-300 flex items-center gap-1.5 mb-5">
+                        <svg class="h-3.5 w-3.5 text-purple-500 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94.63 1.5 1.98 2.63 3.61 2.96V19H7v2h10v-2h-4v-3.1c1.63-.33 2.98-1.46 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"/></svg>
+                        MONTHLY GRINDERS LIST
                     </span>
                     
                     <div class="grid gap-2.5">
@@ -300,12 +304,12 @@ $stat_rows = [
             <span class="text-[9px] font-bold text-slate-450 uppercase tracking-wider hidden sm:inline-block">Swipe horizontally ↔</span>
         </div>
         
-        <!-- Swipeable Row deck -->
-        <div class="flex gap-4 overflow-x-auto snap-x snap-mandatory no-scrollbar pb-2">
+        <!-- Swipeable Row deck (WITH VERTICAL ROOM FOR SMOOTH HOVER TRANSITION) -->
+        <div class="flex gap-4 overflow-x-auto snap-x snap-mandatory no-scrollbar py-3 px-1">
             <?php foreach ($stat_rows as $row): 
                 $percentage = min(100, ($row['value'] / $row['max']) * 100);
             ?>
-                <div class="snap-start shrink-0 w-[240px] sm:w-[280px] rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.02] p-5 shadow-md relative overflow-hidden hover-glow-card">
+                <div class="snap-start shrink-0 w-[240px] sm:w-[280px] rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.02] p-5 shadow-md relative overflow-hidden hover-glow-card transition-all duration-300 ease-out">
                     <div class="flex justify-between items-end mb-4">
                         <span class="text-[10px] font-black text-slate-500 dark:text-zinc-400 uppercase tracking-widest"><?php echo $row['label']; ?></span>
                         <span class="text-xl font-black text-slate-900 dark:text-white"><?php echo $row['display']; ?></span>
@@ -325,8 +329,8 @@ $stat_rows = [
     <div class="mx-auto max-w-[1440px]">
         <div class="grid gap-12 lg:grid-cols-2 items-center">
             
-            <!-- Tech Illustration (Visual representation) -->
-            <div class="flex justify-center order-2 lg:order-1">
+            <!-- Tech Illustration (Aligned to Left) -->
+            <div class="flex justify-start order-2 lg:order-1">
                 <div class="relative w-full max-w-lg">
                     <!-- Glowing backgrounds -->
                     <div class="absolute -inset-4 rounded-3xl bg-purple-500/10 blur-xl pointer-events-none"></div>
@@ -347,7 +351,10 @@ $stat_rows = [
                 </div>
 
                 <div class="rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.01] p-6 shadow-sm hover-glow-card">
-                    <h4 class="text-base sm:text-lg font-black text-slate-900 dark:text-white mb-3 font-space flex items-center gap-2">☁️ Real Hands-on Development</h4>
+                    <h4 class="text-base sm:text-lg font-black text-slate-900 dark:text-white mb-3 font-space flex items-center gap-2">
+                        <svg class="h-5 w-5 text-purple-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 00-9.78 2.096A4.001 4.001 0 003 15z" /></svg>
+                        Real Hands-on Development
+                    </h4>
                     <p class="text-xs sm:text-sm md:text-base text-slate-600 dark:text-zinc-350 leading-relaxed font-semibold">
                         We skip tutorial-only approaches to construct production-ready configurations using S3, CloudFormation, Cognito, and API Gateway.
                     </p>
@@ -394,34 +401,36 @@ $stat_rows = [
 
 <!-- 6. PARTNERS MARQUEE LOOP (AT THE BOTTOM) -->
 <section class="border-t border-slate-200 dark:border-white/10 py-12 overflow-hidden bg-slate-100/50 dark:bg-black/20">
-    <div class="mx-auto max-w-[1440px] px-6 mb-6">
-        <p class="text-center text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">Campus Chapter Partners</p>
-    </div>
-    
-    <!-- Marquee loop container -->
-    <div class="w-full overflow-hidden relative py-4">
-        <div class="flex gap-6 w-max animate-marquee items-center">
-            <?php
-            if (!empty($partners)) {
-                // Loop array duplication to ensure seamless visual loop
-                $marquee_loop = array_merge($partners, $partners, $partners);
-                foreach ($marquee_loop as $partner):
+    <div class="mx-auto max-w-[1440px] px-4 sm:px-6">
+        <div class="mb-6">
+            <p class="text-center text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">Campus Chapter Partners</p>
+        </div>
+        
+        <!-- Marquee loop container (CONSTRAINED TO SITE WIDTH) -->
+        <div class="w-full overflow-hidden relative py-4 rounded-3xl">
+            <div class="flex gap-6 w-max animate-marquee items-center">
+                <?php
+                if (!empty($partners)) {
+                    // Loop array duplication to ensure seamless visual loop
+                    $marquee_loop = array_merge($partners, $partners, $partners);
+                    foreach ($marquee_loop as $partner):
+                    ?>
+                        <div class="flex items-center gap-4 rounded-3xl border border-slate-200 dark:border-white/10 bg-white/90 dark:bg-white/[0.03] px-6 py-4 min-w-[280px] sm:min-w-[320px] shrink-0 shadow-md backdrop-blur-md hover:border-purple-500/40 transition-all">
+                            <div class="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-white dark:bg-white p-2 flex items-center justify-center shrink-0 border border-slate-200/80 dark:border-white/20 shadow-sm">
+                                <img src="<?php echo htmlspecialchars($partner['logo']); ?>" alt="<?php echo htmlspecialchars($partner['name']); ?>" class="max-h-full max-w-full object-contain">
+                            </div>
+                            <div class="min-w-0">
+                                <p class="text-sm sm:text-base font-black text-slate-900 dark:text-white font-space truncate"><?php echo htmlspecialchars($partner['name']); ?></p>
+                                <p class="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 mt-0.5">Official Partner</p>
+                            </div>
+                        </div>
+                    <?php 
+                    endforeach;
+                } else {
+                    echo '<p class="text-xs text-slate-500 italic py-2 text-center w-full">No active partners listed.</p>';
+                }
                 ?>
-                    <div class="flex items-center gap-4 rounded-3xl border border-slate-200 dark:border-white/10 bg-white/90 dark:bg-white/[0.03] px-6 py-4 min-w-[280px] sm:min-w-[320px] shrink-0 shadow-md backdrop-blur-md hover:border-purple-500/40 transition-all">
-                        <div class="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-white dark:bg-white p-2 flex items-center justify-center shrink-0 border border-slate-200/80 dark:border-white/20 shadow-sm">
-                            <img src="<?php echo htmlspecialchars($partner['logo']); ?>" alt="<?php echo htmlspecialchars($partner['name']); ?>" class="max-h-full max-w-full object-contain">
-                        </div>
-                        <div class="min-w-0">
-                            <p class="text-sm sm:text-base font-black text-slate-900 dark:text-white font-space truncate"><?php echo htmlspecialchars($partner['name']); ?></p>
-                            <p class="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 mt-0.5">Official Partner</p>
-                        </div>
-                    </div>
-                <?php 
-                endforeach;
-            } else {
-                echo '<p class="text-xs text-slate-500 italic py-2 text-center w-full">No active partners listed.</p>';
-            }
-            ?>
+            </div>
         </div>
     </div>
 </section>

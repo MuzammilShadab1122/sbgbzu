@@ -102,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         <div>
             <p class="text-[10px] font-black uppercase tracking-[0.28em] text-purple-600 dark:text-purple-400">Official Rewards Catalog</p>
             <h1 class="mt-2 text-3xl sm:text-5xl font-black text-slate-900 dark:text-white leading-none font-space">
-                AWS <span class="text-glow-gradient">Swags Store</span> 🎁
+                AWS <span class="text-glow-gradient">Swags Store</span>
             </h1>
             <p class="mt-4 max-w-2xl text-xs sm:text-sm leading-relaxed text-slate-500 dark:text-zinc-400 font-medium">
                 Redeem your hard-earned Builder PTS for exclusive AWS gear, apparel, water bottles, and accessories! Select a swag to request a claim.
@@ -225,7 +225,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             ✕
         </button>
 
-        <h3 class="text-xl font-black text-slate-900 dark:text-white font-space mb-1">🎁 Confirm Swag Claim</h3>
+        <h3 class="text-xl font-black text-slate-900 dark:text-white font-space mb-1 flex items-center gap-2">
+            <svg class="h-5 w-5 text-purple-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v13m0-13V3.5a2.5 2.5 0 115 0V8h-5zm0 0H7a2.5 2.5 0 115 0V8zm-7 0h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V10a2 2 0 012-2z"/></svg>
+            Confirm Swag Claim
+        </h3>
         <p class="text-xs text-slate-500 dark:text-zinc-400 mb-6">Review your order details below. Claims are locked to your authenticated account.</p>
 
         <form action="store.php" method="POST" class="space-y-4">
