@@ -81,6 +81,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     $success = "Builder '$name' (Member ID: <strong>$member_code</strong>) added successfully with automatically assigned login credentials.";
                 }
             
+            } elseif ($action === 'add_announcement') {
+            $message = trim($_POST['message'] ?? '');
+            if ($message === '') {
+                $error = "Announcement message cannot be empty.";
+            } elseif (strlen($message) > 500) {
+                $error = "Announcement must be 500 characters or fewer.";
+            } else {
+                $stmt = $db->prepare("INSERT INTO `announcements` (`message`) VALUES (?)");
+                $stmt->execute([$message]);
+                $success = "Announcement posted.";
+            }
+
+        } elseif ($action === 'toggle_announcement') {
+            $stmt = $db->prepare("UPDATE `announcements` SET `is_active` = 1 - `is_active` WHERE `id` = ?");
+            $stmt->execute([(int)($_POST['id'] ?? 0)]);
+            $success = "Announcement updated.";
+
+        } elseif ($action === 'delete_announcement') {
+            $stmt = $db->prepare("DELETE FROM `announcements` WHERE `id` = ?");
+            $stmt->execute([(int)($_POST['id'] ?? 0)]);
+            $success = "Announcement deleted.";
+
         } elseif ($action === 'reset_member_password') {
             $member_id = intval($_POST['member_id']);
             $new_pass = trim($_POST['new_password'] ?? '');
@@ -509,6 +531,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             ⚠️ <?php echo htmlspecialchars($error); ?>
         </div>
     <?php endif; ?>
+<?php $all_announcements = $db->query("SELECT * FROM `announcements` ORDER BY `id` DESC")->fetchAll(); ?>
+<section class="mb-10 rounded-2xl border border-slate-300 dark:border-white/10 p-6">
+    <h2 class="text-xl font-bold mb-4">Announcements</h2>
+
+    <form method="post" class="flex flex-col sm:flex-row gap-3 mb-6">
+        <input type="hidden" name="action" value="add_announcement">
+        <input type="text" name="message" maxlength="500" required
+               placeholder="Write an announcement (shown on the home page slider)"
+               class="flex-1 rounded-xl border border-slate-300 dark:border-white/20 bg-transparent px-4 py-2">
+        <button type="submit" class="rounded-xl bg-purple-600 text-white font-bold px-5 py-2">Post</button>
+    </form>
+
+    <?php if (empty($all_announcements)): ?>
+        <p class="opacity-70">No announcements yet.</p>
+    <?php endif; ?>
+
+    <?php foreach ($all_announcements as $a): ?>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-3 border-t border-slate-300 dark:border-white/10">
+            <div>
+                <?= htmlspecialchars($a['message']) ?>
+                <span class="text-xs opacity-60">(<?= $a['is_active'] ? 'Visible' : 'Hidden' ?>)</span>
+            </div>
+            <div class="flex gap-2">
+                <form method="post">
+                    <input type="hidden" name="action" value="toggle_announcement">
+                    <input type="hidden" name="id" value="<?= (int)$a['id'] ?>">
+                    <button type="submit" class="rounded-lg border border-slate-400 px-3 py-1 text-sm"><?= $a['is_active'] ? 'Hide' : 'Show' ?></button>
+                </form>
+                <form method="post" onsubmit="return confirm('Delete this announcement?');">
+                    <input type="hidden" name="action" value="delete_announcement">
+                    <input type="hidden" name="id" value="<?= (int)$a['id'] ?>">
+                    <button type="submit" class="rounded-lg border border-red-400 text-red-500 px-3 py-1 text-sm">Delete</button>
+                </form>
+            </div>
+        </div>
+    <?php endforeach; ?>
+</section>
 
     <!-- TAB SELECTORS -->
     <div class="flex gap-2 overflow-x-auto no-scrollbar border-b border-slate-200 dark:border-white/10 pb-2 mb-8 relative z-20">

@@ -86,6 +86,16 @@ try {
         ) ENGINE=InnoDB;");
     }
 
+    $announcementsTableExists = $db->query("SHOW TABLES LIKE 'announcements'")->rowCount() > 0;
+    if (!$announcementsTableExists) {
+        $db->exec("CREATE TABLE IF NOT EXISTS `announcements` (
+            `id` INT AUTO_INCREMENT PRIMARY KEY,
+            `message` VARCHAR(500) NOT NULL,
+            `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+            `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB;");
+    }
+
     // Dynamic column migrations for existing databases
     try {
         $colCheck = $db->query("SHOW COLUMNS FROM `members` LIKE 'member_code'")->rowCount();
@@ -329,6 +339,9 @@ try {
                         JOIN `swags` s ON r.swag_id = s.id 
                         ORDER BY r.id DESC");
     $swag_requests = $stmt->fetchAll();
+           // Fetch active announcements for the home page slider
+    $stmt = $db->query("SELECT * FROM `announcements` WHERE `is_active` = 1 ORDER BY `id` DESC");
+    $announcements = $stmt->fetchAll();
 } catch (Exception $e) {
     $participants = [];
     $events = [];
@@ -338,6 +351,7 @@ try {
     $partners = [];
     $swags = [];
     $swag_requests = [];
+    $announcements = [];
 }
 
 // Meta metadata for club structure

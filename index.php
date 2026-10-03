@@ -74,6 +74,24 @@ $stat_rows = [
 ];
 ?>
 
+<?php if (!empty($announcements)): ?>
+<style>
+    .announce-bar { overflow: hidden; white-space: nowrap; background: linear-gradient(90deg, #7c3aed, #a855f7); color: #fff; padding: 10px 0; border-radius: 14px; margin: 16px auto; max-width: 1760px; }
+    .announce-track { display: inline-block; animation: announce-ltr 25s linear infinite; }
+    .announce-bar:hover .announce-track { animation-play-state: paused; }
+    .announce-item { display: inline-block; margin: 0 48px; font-weight: 600; letter-spacing: 0.02em; }
+    @keyframes announce-ltr { from { transform: translateX(-100%); } to { transform: translateX(100vw); } }
+    @media (prefers-reduced-motion: reduce) { .announce-track { animation: none; } }
+</style>
+<div class="announce-bar" role="region" aria-label="Announcements">
+    <div class="announce-track">
+        <?php foreach ($announcements as $a): ?>
+            <span class="announce-item"><?= htmlspecialchars($a['message']) ?></span>
+        <?php endforeach; ?>
+    </div>
+</div>
+<?php endif; ?>
+
 <!-- 1. HERO GREETING BLOCK -->
 <section class="relative px-4 sm:px-6 pt-12 pb-8 overflow-hidden">
     <div class="mx-auto max-w-[1440px] relative z-10">
