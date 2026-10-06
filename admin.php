@@ -515,9 +515,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             <h2 class="mt-2 text-3xl sm:text-5xl font-black text-slate-900 dark:text-white leading-none font-space"><span class="text-glow-gradient">Lead Operations</span> Panel</h2>
             <p class="mt-4 max-w-2xl text-xs sm:text-sm leading-relaxed text-slate-500 dark:text-zinc-400 font-medium">Add members, update points, release upcoming events, publish notices, and announce spotlights.</p>
         </div>
-        <a href="logout.php" class="rounded-full bg-red-500/10 border border-red-500/20 px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-red-600 dark:text-red-400 hover:bg-red-500/20 transition-all text-center self-start sm:self-center shrink-0">
-            Sign Out
-        </a>
+        <div class="flex items-center gap-3 self-start sm:self-center shrink-0">
+            <a href="quiz.php?view=admin" class="rounded-full bg-purple-600 hover:bg-purple-500 px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-white transition-all shadow-md shadow-purple-600/30 flex items-center gap-1.5">
+                ⚡ Quiz Generator & Settings
+            </a>
+            <a href="logout.php" class="rounded-full bg-red-500/10 border border-red-500/20 px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-red-600 dark:text-red-400 hover:bg-red-500/20 transition-all text-center">
+                Sign Out
+            </a>
+        </div>
     </div>
 
     <!-- Notification Banners -->
@@ -595,6 +600,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         <button type="button" data-tab="posts-tab" onclick="switchTab('posts-tab')" id="posts-tab-btn" class="tab-btn rounded-full px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white cursor-pointer relative z-20 transition-all">
             Notices & Blog
         </button>
+        <a href="quiz.php?view=admin" class="rounded-full px-5 py-2.5 text-[10px] font-black uppercase tracking-widest bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-600/20 hover:opacity-90 cursor-pointer relative z-20 transition-all flex items-center gap-1.5 shrink-0">
+            ⚡ Quiz Generator & Settings
+        </a>
     </div>
 
     <!-- 1. MEMBERS DIRECTORY TAB -->
