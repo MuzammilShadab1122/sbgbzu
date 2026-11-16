@@ -1,5 +1,77 @@
 <?php
 // index.php
+require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/includes/db.php';
+
+// Handle Community Day Event Signup Form Submission
+$signup_error = '';
+$signup_success = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'event_signup') {
+    $name = trim($_POST['name'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $university = trim($_POST['university'] ?? '');
+    $eventName = trim($_POST['event_name'] ?? 'AWS Student Community Day Multan 2026');
+    $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+
+    $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') || isset($_POST['is_ajax']);
+
+    if (empty($name) || empty($email) || empty($university)) {
+        if ($isAjax) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'error' => 'Please provide your Full Name, Email, and University.']);
+            exit;
+        }
+        $signup_error = 'Please fill out all required fields.';
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        if ($isAjax) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'error' => 'Please provide a valid email address.']);
+            exit;
+        }
+        $signup_error = 'Please enter a valid email address.';
+    } else {
+        try {
+            $stmt = $db->prepare("INSERT INTO `event_signups` (`name`, `email`, `university`, `event_name`, `ip_address`) VALUES (?, ?, ?, ?, ?)");
+            $stmt->execute([$name, $email, $university, $eventName, $ip]);
+
+            // Query total registrations (base 582 + count)
+            $dbSignups = (int)$db->query("SELECT COUNT(*) FROM `event_signups` WHERE `event_name` = 'AWS Student Community Day Multan 2026'")->fetchColumn();
+            $totalCount = 582 + $dbSignups;
+
+            $_SESSION['community_day_registered'] = true;
+            $_SESSION['community_day_name'] = $name;
+
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => true,
+                    'total_count' => $totalCount,
+                    'meetup_url' => 'https://meetu.ps/e/QljqK/1fyQWj/i',
+                    'message' => 'Registration successful! Your spot is reserved. Now you can click Join Us to complete your Meetup RSVP.'
+                ]);
+                exit;
+            }
+            $signup_success = 'Registration successful! Your spot is reserved.';
+        } catch (Exception $e) {
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
+                exit;
+            }
+            $signup_error = 'Database error: ' . $e->getMessage();
+        }
+    }
+}
+
+// Fetch current count for Community Day (Base: 582)
+$dbSignups = 0;
+try {
+    $dbSignups = (int)$db->query("SELECT COUNT(*) FROM `event_signups` WHERE `event_name` = 'AWS Student Community Day Multan 2026'")->fetchColumn();
+} catch (Exception $e) {}
+$communityDayCount = 582 + $dbSignups;
+$isRegistered = !empty($_SESSION['community_day_registered']);
+
 require_once 'includes/header.php';
 
 // Find Star of the Month details
@@ -91,6 +163,236 @@ $stat_rows = [
     </div>
 </div>
 <?php endif; ?>
+
+<!-- ========================================================================= -->
+<!-- FULL-SCREEN EVENT POST: AWS STUDENT COMMUNITY DAY MULTAN 2026              -->
+<!-- ========================================================================= -->
+<section id="community-day-post" class="relative w-full min-h-[calc(100vh-80px)] lg:min-h-screen flex items-center justify-center py-10 lg:py-16 px-4 sm:px-6 lg:px-10 overflow-hidden bg-gradient-to-br from-[#12072b] via-[#1b0a3b] to-[#0c041c] text-white border-b border-purple-500/20">
+
+    <!-- Ambient glowing backdrop lighting -->
+    <div class="pointer-events-none absolute -top-32 -left-32 w-96 h-96 rounded-full bg-purple-600/30 blur-[120px]"></div>
+    <div class="pointer-events-none absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-amber-500/25 blur-[120px]"></div>
+    <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(168,85,247,0.12),transparent_70%)]"></div>
+
+    <div class="mx-auto max-w-[1440px] w-full relative z-10">
+        <div class="grid gap-10 lg:grid-cols-12 items-center">
+            
+            <!-- Left Column: Poster, Story, Perks & Details (7 cols) -->
+            <div class="lg:col-span-7 space-y-6">
+                
+                <!-- Ribbon & Eyebrow Badge -->
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="inline-flex items-center gap-2 rounded-full bg-amber-500/15 border border-amber-500/30 px-3.5 py-1.5 text-[10px] font-black uppercase tracking-widest text-amber-300 shadow-sm">
+                        <span class="h-2 w-2 rounded-full bg-amber-400 animate-pulse"></span>
+                        Biggest Community Event in Multan!
+                    </span>
+                    <span class="rounded-full bg-purple-500/20 border border-purple-500/30 px-3 py-1 text-[10px] font-bold text-purple-200">
+                        15 DEC 2026 • BZU Multan
+                    </span>
+                </div>
+
+                <!-- Main Post Title -->
+                <div>
+                    <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-[1.15] font-space text-white">
+                        Multan, Are You Ready? <br>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-pink-400 to-purple-300">
+                            The Biggest Cloud Event Is Coming!
+                        </span>
+                    </h1>
+                    <p class="mt-3 text-sm sm:text-base font-bold text-purple-200 leading-relaxed">
+                        The wait is finally over!
+                    </p>
+                    <p class="mt-1 text-xs sm:text-sm text-slate-300 leading-relaxed font-medium">
+                        AWS Student Builder Group BZU is proudly bringing <strong class="text-white font-bold">AWS Student Community Day Multan 2026</strong> to Bahauddin Zakariya University! This is not just an event, it's a full day of learning, networking, innovation, and fun with the AWS Community.
+                    </p>
+                </div>
+
+                <!-- Poster Preview + Highlights Grid -->
+                <div class="flex flex-col sm:flex-row gap-5 items-center sm:items-start p-4 sm:p-5 rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-md">
+                    
+                    <!-- Poster Thumbnail with QR Code Badge -->
+                    <div class="relative group rounded-2xl overflow-hidden border border-purple-500/30 bg-purple-950/40 shadow-xl w-44 sm:w-48 shrink-0 cursor-pointer" onclick="openCommunityPosterModal()">
+                        <img src="public/images/community_day_2026.jpg" alt="AWS Student Community Day Multan 2026 Poster" class="w-full h-auto object-cover group-hover:scale-105 transition-all duration-300">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center p-2.5">
+                            <span class="text-[9px] font-black uppercase text-amber-300 bg-black/60 px-2 py-1 rounded-full border border-amber-400/30">
+                                Click to Enlarge
+                            </span>
+                        </div>
+                        <div class="p-2 text-center bg-black/70 border-t border-white/10">
+                            <span class="text-[9px] font-black uppercase tracking-wider text-amber-400">
+                                QR Code on Poster
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- What is waiting for you (List) -->
+                    <div class="flex-1 space-y-2.5 min-w-0">
+                        <p class="text-[11px] font-black uppercase tracking-widest text-amber-400 font-space">
+                            Here is what is waiting for you:
+                        </p>
+                        <div class="grid grid-cols-1 gap-2">
+                            <div class="flex items-center gap-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20 px-3.5 py-2 text-xs font-semibold text-slate-200">
+                                <span class="h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0"></span>
+                                <span>Exclusive AWS Swag Pack</span>
+                            </div>
+                            <div class="flex items-center gap-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20 px-3.5 py-2 text-xs font-semibold text-slate-200">
+                                <span class="h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0"></span>
+                                <span>Inspiring Tech Talks by Industry Experts</span>
+                            </div>
+                            <div class="flex items-center gap-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20 px-3.5 py-2 text-xs font-semibold text-slate-200">
+                                <span class="h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0"></span>
+                                <span>Networking Opportunities with Developers & Students</span>
+                            </div>
+                            <div class="flex items-center gap-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20 px-3.5 py-2 text-xs font-semibold text-slate-200">
+                                <span class="h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0"></span>
+                                <span>Fun Activities & Contests</span>
+                            </div>
+                            <div class="flex items-center gap-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20 px-3.5 py-2 text-xs font-semibold text-slate-200">
+                                <span class="h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0"></span>
+                                <span>Tea & Refreshments</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="text-xs sm:text-sm text-purple-200 font-medium italic">
+                    Whether you are a beginner in Cloud Computing or already building on AWS, this event is for YOU!
+                </p>
+
+                <!-- Event Details: Date & Venue -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-3.5 flex items-center gap-3">
+                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/20 text-amber-400 text-xs font-black uppercase border border-amber-500/30">
+                            DATE
+                        </div>
+                        <div>
+                            <span class="block text-[9px] font-black uppercase tracking-wider text-slate-400">Date</span>
+                            <span class="text-xs sm:text-sm font-black text-white font-space">15 December 2026</span>
+                        </div>
+                    </div>
+
+                    <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-3.5 flex items-center gap-3">
+                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-500/20 text-purple-400 text-xs font-black uppercase border border-purple-500/30">
+                            VENUE
+                        </div>
+                        <div>
+                            <span class="block text-[9px] font-black uppercase tracking-wider text-slate-400">Venue</span>
+                            <span class="text-xs sm:text-sm font-black text-white font-space">Bahauddin Zakariya University (BZU), Multan</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Registration Guideline -->
+                <div class="rounded-2xl border border-purple-500/30 bg-purple-950/40 p-4 flex items-start gap-3 text-xs text-purple-200">
+                    <div class="leading-relaxed">
+                        <strong class="text-amber-300 uppercase tracking-wider text-[11px] block mb-0.5">How to Register?</strong>
+                        Scan the QR code on the poster OR click the <strong class="text-white underline">Join us</strong> button to Register.
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Column: Compulsory Registration Form & Join Us Action (5 cols) -->
+            <div class="lg:col-span-5">
+                <div id="signup-card" class="rounded-3xl border-2 border-purple-500/30 bg-slate-900/95 dark:bg-[#0e0821]/95 backdrop-blur-2xl p-6 sm:p-8 shadow-2xl relative transition-all duration-300">
+                    
+                    <!-- Live Registration Counter Badge (582 + increments) -->
+                    <div class="flex items-center justify-between pb-4 border-b border-white/10 mb-5">
+                        <div>
+                            <span class="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Total Live Registrations</span>
+                            <div class="flex items-baseline gap-2 mt-0.5">
+                                <span id="live-reg-count" class="text-3xl sm:text-4xl font-black font-space text-amber-400 transition-all duration-300">
+                                    <?= $communityDayCount ?>
+                                </span>
+                                <span class="text-xs font-bold uppercase tracking-wider text-slate-300">Registration</span>
+                            </div>
+                        </div>
+                        <span class="rounded-full bg-emerald-500/15 border border-emerald-500/30 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-emerald-400 flex items-center gap-1.5 animate-pulse">
+                            <span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+                            Live Counter
+                        </span>
+                    </div>
+
+                    <!-- Form Header -->
+                    <div class="mb-4">
+                        <h3 class="text-xl font-black text-white font-space">Register for Community Day</h3>
+                        <p class="text-xs text-slate-300 mt-1">
+                            Enter your Name, Email, and University to connect to the SignUp database and unlock the Meetup RSVP button.
+                        </p>
+                    </div>
+
+                    <!-- Feedback Alert Container -->
+                    <div id="signup-alert-box" class="hidden rounded-2xl p-3.5 mb-4 text-xs font-bold"></div>
+
+                    <!-- Registration Form -->
+                    <form id="community-day-form" method="POST" onsubmit="handleCommunityDaySignup(event)" class="space-y-4">
+                        <input type="hidden" name="action" value="event_signup">
+                        <input type="hidden" name="is_ajax" value="1">
+                        <input type="hidden" name="event_name" value="AWS Student Community Day Multan 2026">
+
+                        <div>
+                            <label class="block text-[10px] font-black uppercase tracking-wider text-slate-300 mb-1.5">
+                                Full Name
+                            </label>
+                            <input type="text" name="name" id="reg-name" required placeholder="Enter your full name" class="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-xs sm:text-sm text-white placeholder-slate-400 outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-500/20 transition-all">
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-black uppercase tracking-wider text-slate-300 mb-1.5">
+                                Email Address
+                            </label>
+                            <input type="email" name="email" id="reg-email" required placeholder="Enter your email address" class="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-xs sm:text-sm text-white placeholder-slate-400 outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-500/20 transition-all">
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-black uppercase tracking-wider text-slate-300 mb-1.5">
+                                University Name
+                            </label>
+                            <input type="text" name="university" id="reg-university" required placeholder="Enter your university name" class="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-xs sm:text-sm text-white placeholder-slate-400 outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-500/20 transition-all">
+                        </div>
+
+                        <button type="submit" id="reg-submit-btn" class="w-full rounded-2xl bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 py-3.5 text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-purple-600/30 transition-all cursor-pointer flex items-center justify-center gap-2">
+                            <span>Submit Registration</span>
+                        </button>
+                    </form>
+
+                    <!-- Compulsory Form Notice & "Join Us" Button Scenario -->
+                    <div class="mt-6 pt-5 border-t border-white/10 space-y-3">
+                        <div id="join-us-notice" class="rounded-2xl bg-amber-500/10 border border-amber-500/25 p-3 text-[11px] text-amber-300 leading-snug flex items-start gap-2.5">
+                            <span><strong>Compulsory Notice:</strong> Fill this form to Click Join Us. You will be allowed to click <em>Join Us</em> only after filling this form.</span>
+                        </div>
+
+                        <!-- Locked Join Us Button (Default before submission) -->
+                        <button type="button" id="join-us-locked-btn" onclick="triggerLockedJoinPrompt()" class="w-full py-4 rounded-2xl bg-slate-800 border border-white/10 text-slate-400 font-black text-xs uppercase tracking-widest cursor-not-allowed flex items-center justify-center gap-2 transition-all hover:bg-slate-750">
+                            <span>Join Us (Fill form to unlock)</span>
+                        </button>
+
+                        <!-- Unlocked Join Us Button (Active after submission) -->
+                        <a id="join-us-unlocked-btn" href="https://meetu.ps/e/QljqK/1fyQWj/i" target="_blank" rel="noopener noreferrer" class="hidden w-full py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:scale-[1.02] text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-orange-500/40 flex items-center justify-center gap-2 transition-all text-center">
+                            <span>Join Us on Meetup &rarr;</span>
+                        </a>
+
+                        <!-- Beside / Underneath Meetup Link -->
+                        <div class="p-2.5 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col sm:flex-row items-center justify-between gap-1 text-center sm:text-left">
+                            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Meetup Link:</span>
+                            <a href="https://meetu.ps/e/QljqK/1fyQWj/i" id="meetup-url-display" class="text-[11px] font-mono text-purple-300 hover:text-amber-300 underline break-all transition-colors" onclick="return handleRawLinkClick(event)">https://meetu.ps/e/QljqK/1fyQWj/i</a>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- Poster Zoom Lightbox Modal -->
+<div id="poster-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md hidden opacity-0 transition-opacity duration-300" onclick="closeCommunityPosterModal()">
+    <div class="relative max-w-lg w-full bg-slate-900 rounded-3xl overflow-hidden border border-purple-500/40 shadow-2xl" onclick="event.stopPropagation()">
+        <button onclick="closeCommunityPosterModal()" class="absolute top-3 right-3 h-8 w-8 rounded-full bg-black/60 text-white font-bold flex items-center justify-center hover:bg-black/90 border border-white/20 z-10 cursor-pointer">✕</button>
+        <img src="public/images/community_day_2026.jpg" alt="AWS Student Community Day Multan 2026 Full Poster" class="w-full h-auto object-contain max-h-[85vh]">
+    </div>
+</div>
 
 <!-- 1. HERO GREETING BLOCK -->
 <section class="relative px-4 sm:px-6 pt-12 pb-8 overflow-hidden">
@@ -452,6 +754,156 @@ $stat_rows = [
         </div>
     </div>
 </section>
+
+<!-- Client-Side Scripts for Community Day Post & Registration Arena -->
+<script>
+let hasRegisteredForCommunityDay = <?= $isRegistered ? 'true' : 'false' ?> || localStorage.getItem('sbg_community_day_registered') === '1';
+
+function updateCommunityDayUIState() {
+    const lockedBtn = document.getElementById('join-us-locked-btn');
+    const unlockedBtn = document.getElementById('join-us-unlocked-btn');
+    const notice = document.getElementById('join-us-notice');
+
+    if (hasRegisteredForCommunityDay) {
+        if (lockedBtn) lockedBtn.classList.add('hidden');
+        if (unlockedBtn) unlockedBtn.classList.remove('hidden');
+        if (notice) {
+            notice.className = 'rounded-2xl bg-emerald-500/15 border border-emerald-500/30 p-3 text-[11px] text-emerald-300 leading-snug flex items-start gap-2.5';
+            notice.innerHTML = '<span><strong>Spot Reserved:</strong> You have filled the form. Click the <em>Join Us</em> button above to complete your Meetup RSVP.</span>';
+        }
+    } else {
+        if (lockedBtn) lockedBtn.classList.remove('hidden');
+        if (unlockedBtn) unlockedBtn.classList.add('hidden');
+    }
+}
+
+function triggerLockedJoinPrompt() {
+    const alertBox = document.getElementById('signup-alert-box');
+    const card = document.getElementById('signup-card');
+    const nameInput = document.getElementById('reg-name');
+
+    if (alertBox) {
+        alertBox.className = 'rounded-2xl p-3.5 mb-4 text-xs font-bold bg-amber-500/20 border border-amber-500/40 text-amber-300 animate-pulse';
+        alertBox.innerHTML = '<strong>Compulsory Step:</strong> Fill this form to Click Join Us! Please enter your Name, Email, and University first.';
+        alertBox.classList.remove('hidden');
+    }
+
+    if (card) {
+        card.classList.add('ring-4', 'ring-amber-500/50');
+        setTimeout(() => card.classList.remove('ring-4', 'ring-amber-500/50'), 1500);
+    }
+
+    if (nameInput) {
+        nameInput.focus();
+        nameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+function handleRawLinkClick(e) {
+    if (!hasRegisteredForCommunityDay) {
+        e.preventDefault();
+        triggerLockedJoinPrompt();
+        return false;
+    }
+    return true;
+}
+
+function handleCommunityDaySignup(e) {
+    e.preventDefault();
+    const form = e.target;
+    const submitBtn = document.getElementById('reg-submit-btn');
+    const alertBox = document.getElementById('signup-alert-box');
+    const name = form.name.value.trim();
+    const email = form.email.value.trim();
+    const university = form.university.value.trim();
+
+    if (!name || !email || !university) {
+        triggerLockedJoinPrompt();
+        return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span>Connecting to SignUp Database...</span>';
+
+    const formData = new FormData(form);
+
+    fetch('index.php', {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span>Submit Registration</span>';
+
+        if (data.success) {
+            hasRegisteredForCommunityDay = true;
+            localStorage.setItem('sbg_community_day_registered', '1');
+
+            // Increment and animate counter smoothly
+            const countEl = document.getElementById('live-reg-count');
+            if (countEl && data.total_count) {
+                countEl.innerText = data.total_count;
+                countEl.classList.add('text-emerald-400', 'scale-125');
+                setTimeout(() => countEl.classList.remove('scale-125'), 600);
+            }
+
+            if (alertBox) {
+                alertBox.className = 'rounded-2xl p-3.5 mb-4 text-xs font-bold bg-emerald-500/20 border border-emerald-500/40 text-emerald-300';
+                alertBox.innerHTML = '<strong>Registration Successful!</strong> Your spot is secured in SignUp database. Opening Meetup now...';
+                alertBox.classList.remove('hidden');
+            }
+
+            // Unlock the Join Us button
+            updateCommunityDayUIState();
+
+            // Open Meetup URL automatically
+            window.open('https://meetu.ps/e/QljqK/1fyQWj/i', '_blank');
+        } else {
+            if (alertBox) {
+                alertBox.className = 'rounded-2xl p-3.5 mb-4 text-xs font-bold bg-red-500/20 border border-red-500/40 text-red-300';
+                alertBox.innerHTML = data.error || 'Failed to submit registration. Please try again.';
+                alertBox.classList.remove('hidden');
+            }
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span>Submit Registration</span>';
+        if (alertBox) {
+            alertBox.className = 'rounded-2xl p-3.5 mb-4 text-xs font-bold bg-red-500/20 border border-red-500/40 text-red-300';
+            alertBox.innerHTML = 'Network error. Please try again.';
+            alertBox.classList.remove('hidden');
+        }
+    });
+}
+
+function openCommunityPosterModal() {
+    const modal = document.getElementById('poster-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        setTimeout(() => modal.classList.remove('opacity-0'), 10);
+    }
+}
+
+function closeCommunityPosterModal() {
+    const modal = document.getElementById('poster-modal');
+    if (modal) {
+        modal.classList.add('opacity-0');
+        setTimeout(() => modal.classList.add('hidden'), 300);
+    }
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeCommunityPosterModal();
+    }
+});
+
+document.addEventListener('DOMContentLoaded', updateCommunityDayUIState);
+</script>
 
 <?php
 require_once 'includes/footer.php';
