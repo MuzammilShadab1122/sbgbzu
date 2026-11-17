@@ -148,18 +148,114 @@ $stat_rows = [
 
 <?php if (!empty($announcements)): ?>
 <style>
-    .announce-bar { overflow: hidden; white-space: nowrap; background: linear-gradient(90deg, #7c3aed, #a855f7); color: #fff; padding: 10px 0; border-radius: 14px; margin: 16px auto; max-width: 1760px; }
-    .announce-track { display: inline-block; animation: announce-ltr 25s linear infinite; }
-    .announce-bar:hover .announce-track { animation-play-state: paused; }
-    .announce-item { display: inline-block; margin: 0 48px; font-weight: 600; letter-spacing: 0.02em; }
-    @keyframes announce-ltr { from { transform: translateX(-100%); } to { transform: translateX(100vw); } }
-    @media (prefers-reduced-motion: reduce) { .announce-track { animation: none; } }
+    .announce-sticky-wrap {
+        position: sticky;
+        top: 76px;
+        z-index: 35;
+        width: 100%;
+        max-width: 1440px;
+        margin: 8px auto 16px auto;
+        padding: 0 16px;
+        pointer-events: auto;
+    }
+    @media (min-width: 1024px) {
+        .announce-sticky-wrap {
+            top: 84px;
+            padding: 0 24px;
+        }
+    }
+    .announce-bar {
+        overflow: hidden;
+        white-space: nowrap;
+        background: linear-gradient(90deg, #dc2626 0%, #ea580c 50%, #f97316 100%);
+        color: #ffffff;
+        padding: 8px 14px;
+        border-radius: 16px;
+        box-shadow: 0 6px 25px -4px rgba(220, 38, 38, 0.45), 0 2px 10px rgba(234, 88, 12, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .announce-badge {
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(0, 0, 0, 0.35);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        color: #ffffff;
+        font-size: 10px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        padding: 4px 10px;
+        border-radius: 9999px;
+    }
+    .announce-pulse-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 9999px;
+        background: #fef08a;
+        box-shadow: 0 0 8px #fde047;
+        animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    .announce-track-wrap {
+        flex: 1;
+        overflow: hidden;
+        position: relative;
+        mask-image: linear-gradient(90deg, transparent 0%, black 2%, black 98%, transparent 100%);
+        -webkit-mask-image: linear-gradient(90deg, transparent 0%, black 2%, black 98%, transparent 100%);
+    }
+    .announce-track {
+        display: inline-flex;
+        align-items: center;
+        white-space: nowrap;
+        animation: announce-scroll 24s linear infinite;
+        will-change: transform;
+    }
+    .announce-sticky-wrap:hover .announce-track {
+        animation-play-state: paused;
+    }
+    .announce-item {
+        display: inline-flex;
+        align-items: center;
+        padding: 0 20px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        color: #ffffff;
+    }
+    .announce-sep {
+        color: rgba(255, 255, 255, 0.6);
+        font-weight: 900;
+        font-size: 11px;
+    }
+    @keyframes announce-scroll {
+        0% { transform: translateX(0%); }
+        100% { transform: translateX(-50%); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .announce-track { animation: none; }
+    }
 </style>
-<div class="announce-bar" role="region" aria-label="Announcements">
-    <div class="announce-track">
-        <?php foreach ($announcements as $a): ?>
-            <span class="announce-item"><?= htmlspecialchars($a['message']) ?></span>
-        <?php endforeach; ?>
+<div class="announce-sticky-wrap" role="region" aria-label="Announcements">
+    <div class="announce-bar">
+        <div class="announce-badge">
+            <span class="announce-pulse-dot"></span>
+            <span>Announcement</span>
+        </div>
+        <div class="announce-track-wrap">
+            <div class="announce-track">
+                <?php for ($rep = 0; $rep < 4; $rep++): ?>
+                    <?php foreach ($announcements as $a): ?>
+                        <span class="announce-item"><?= htmlspecialchars($a['message']) ?></span>
+                        <span class="announce-sep">•</span>
+                    <?php endforeach; ?>
+                <?php endfor; ?>
+            </div>
+        </div>
     </div>
 </div>
 <?php endif; ?>
@@ -210,17 +306,12 @@ $stat_rows = [
                 <!-- Poster Preview + Highlights Grid -->
                 <div class="flex flex-col sm:flex-row gap-5 items-center sm:items-start p-4 sm:p-5 rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-md">
                     
-                    <!-- Poster Thumbnail with QR Code Badge -->
+                    <!-- Poster Thumbnail -->
                     <div class="relative group rounded-2xl overflow-hidden border border-purple-500/30 bg-purple-950/40 shadow-xl w-44 sm:w-48 shrink-0 cursor-pointer" onclick="openCommunityPosterModal()">
                         <img src="public/images/community_day_2026.jpg" alt="AWS Student Community Day Multan 2026 Poster" class="w-full h-auto object-cover group-hover:scale-105 transition-all duration-300">
                         <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center p-2.5">
                             <span class="text-[9px] font-black uppercase text-amber-300 bg-black/60 px-2 py-1 rounded-full border border-amber-400/30">
                                 Click to Enlarge
-                            </span>
-                        </div>
-                        <div class="p-2 text-center bg-black/70 border-t border-white/10">
-                            <span class="text-[9px] font-black uppercase tracking-wider text-amber-400">
-                                QR Code on Poster
                             </span>
                         </div>
                     </div>
@@ -282,14 +373,6 @@ $stat_rows = [
                     </div>
                 </div>
 
-                <!-- Registration Guideline -->
-                <div class="rounded-2xl border border-purple-500/30 bg-purple-950/40 p-4 flex items-start gap-3 text-xs text-purple-200">
-                    <div class="leading-relaxed">
-                        <strong class="text-amber-300 uppercase tracking-wider text-[11px] block mb-0.5">How to Register?</strong>
-                        Scan the QR code on the poster OR click the <strong class="text-white underline">Join us</strong> button to Register.
-                    </div>
-                </div>
-
             </div>
 
             <!-- Right Column: Compulsory Registration Form & Join Us Action (5 cols) -->
@@ -299,12 +382,12 @@ $stat_rows = [
                     <!-- Live Registration Counter Badge (582 + increments) -->
                     <div class="flex items-center justify-between pb-4 border-b border-white/10 mb-5">
                         <div>
-                            <span class="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Total Live Registrations</span>
+                            <span class="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Total Live Pre-Registrations</span>
                             <div class="flex items-baseline gap-2 mt-0.5">
                                 <span id="live-reg-count" class="text-3xl sm:text-4xl font-black font-space text-amber-400 transition-all duration-300">
                                     <?= $communityDayCount ?>
                                 </span>
-                                <span class="text-xs font-bold uppercase tracking-wider text-slate-300">Registration</span>
+                                <span class="text-xs font-bold uppercase tracking-wider text-slate-300">Pre-Registration</span>
                             </div>
                         </div>
                         <span class="rounded-full bg-emerald-500/15 border border-emerald-500/30 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-emerald-400 flex items-center gap-1.5 animate-pulse">
@@ -356,15 +439,11 @@ $stat_rows = [
                         </button>
                     </form>
 
-                    <!-- Compulsory Form Notice & "Join Us" Button Scenario -->
+                    <!-- Join Us Action Scenario -->
                     <div class="mt-6 pt-5 border-t border-white/10 space-y-3">
-                        <div id="join-us-notice" class="rounded-2xl bg-amber-500/10 border border-amber-500/25 p-3 text-[11px] text-amber-300 leading-snug flex items-start gap-2.5">
-                            <span><strong>Compulsory Notice:</strong> Fill this form to Click Join Us. You will be allowed to click <em>Join Us</em> only after filling this form.</span>
-                        </div>
-
                         <!-- Locked Join Us Button (Default before submission) -->
                         <button type="button" id="join-us-locked-btn" onclick="triggerLockedJoinPrompt()" class="w-full py-4 rounded-2xl bg-slate-800 border border-white/10 text-slate-400 font-black text-xs uppercase tracking-widest cursor-not-allowed flex items-center justify-center gap-2 transition-all hover:bg-slate-750">
-                            <span>Join Us (Fill form to unlock)</span>
+                            <span>Join Us</span>
                         </button>
 
                         <!-- Unlocked Join Us Button (Active after submission) -->
@@ -784,7 +863,7 @@ function triggerLockedJoinPrompt() {
 
     if (alertBox) {
         alertBox.className = 'rounded-2xl p-3.5 mb-4 text-xs font-bold bg-amber-500/20 border border-amber-500/40 text-amber-300 animate-pulse';
-        alertBox.innerHTML = '<strong>Compulsory Step:</strong> Fill this form to Click Join Us! Please enter your Name, Email, and University first.';
+        alertBox.innerHTML = '<strong>Registration Required:</strong> Please enter your Full Name, Email, and University to register and access Join Us.';
         alertBox.classList.remove('hidden');
     }
 
