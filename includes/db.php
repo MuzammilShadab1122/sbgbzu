@@ -53,6 +53,17 @@ try {
             ('Bahauddin Zakariya University', 'public/images/partners/bzu.png')");
     }
 
+    // Check if volunteers table exists, if not, create and seed it
+    $volunteersTableExists = $db->query("SHOW TABLES LIKE 'volunteers'")->rowCount() > 0;
+    if (!$volunteersTableExists) {
+        $db->exec("CREATE TABLE IF NOT EXISTS `volunteers` (
+            `id` INT AUTO_INCREMENT PRIMARY KEY,
+            `name` VARCHAR(255) NOT NULL,
+            `team` VARCHAR(100) NOT NULL,
+            `photo` VARCHAR(255) NOT NULL
+        ) ENGINE=InnoDB;");
+    }
+
     // Check if swags table exists, if not, create and seed default AWS Swags
     $swagsTableExists = $db->query("SHOW TABLES LIKE 'swags'")->rowCount() > 0;
     if (!$swagsTableExists) {
@@ -308,6 +319,10 @@ try {
     // 1.8 Fetch all campus partners
     $stmt = $db->query("SELECT * FROM `partners` ORDER BY `id` ASC");
     $partners = $stmt->fetchAll();
+
+    // 1.9 Fetch all campus volunteers
+    $stmt = $db->query("SELECT * FROM `volunteers` ORDER BY `id` ASC");
+    $volunteers = $stmt->fetchAll(); 
     
     // 2. Fetch all events sorted by ID descending
     $stmt = $db->query("SELECT * FROM `events` ORDER BY `id` DESC");
@@ -360,6 +375,7 @@ try {
     $highlights = ['monthLabel' => 'Offline', 'starOfMonthId' => null, 'monthlyGrinders' => []];
     $badges = [];
     $partners = [];
+    $volunteers = [];
     $swags = [];
     $swag_requests = [];
     $announcements = [];

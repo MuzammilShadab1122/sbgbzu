@@ -834,6 +834,50 @@ $stat_rows = [
     </div>
 </section>
 
+<!-- 5.5 CAMPUS VOLUNTEERS MARQUEE (same style as partners) -->
+<?php if (!empty($volunteers)):
+    // Repeat the list so one "half" is always wider than the screen, then use two identical halves for a seamless loop
+    $vol_half = [];
+    $vol_repeat = max(1, (int)ceil(8 / count($volunteers)));
+    for ($r = 0; $r < $vol_repeat; $r++) {
+        $vol_half = array_merge($vol_half, $volunteers);
+    }
+    $vol_duration = count($vol_half) * 4; // seconds for one full loop
+?>
+<style>
+    @keyframes vol-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+    .vol-track { display: flex; width: max-content; animation: vol-marquee var(--vol-duration, 30s) linear infinite; }
+    @media (prefers-reduced-motion: reduce) {
+        .vol-track { animation: none; }
+        .vol-marquee { overflow-x: auto; }
+    }
+</style>
+<section class="border-t border-slate-200 dark:border-white/10 py-12 overflow-hidden bg-slate-100/50 dark:bg-black/20">
+    <div class="mx-auto max-w-[1440px] px-4 sm:px-6">
+        <div class="mb-6">
+            <p class="text-center text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">Campus Volunteers</p>
+        </div>
+
+        <div class="vol-marquee w-full overflow-hidden relative py-4 rounded-3xl">
+            <div class="vol-track items-center" style="--vol-duration: <?php echo (int)$vol_duration; ?>s;">
+                <?php for ($copy = 0; $copy < 2; $copy++): ?>
+                    <?php foreach ($vol_half as $vol): ?>
+                        <div class="flex items-center gap-4 rounded-3xl border border-slate-200 dark:border-white/10 bg-white/90 dark:bg-white/[0.03] px-6 py-4 min-w-[280px] sm:min-w-[320px] shrink-0 mr-6 shadow-md backdrop-blur-md hover:border-purple-500/40 transition-all">
+                            <div class="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-white p-0 overflow-hidden flex items-center justify-center shrink-0 border border-slate-200/80 dark:border-white/20 shadow-sm">
+                                <img src="<?php echo htmlspecialchars($vol['photo']); ?>" alt="<?php echo htmlspecialchars($vol['name']); ?>" class="h-full w-full object-cover">
+                            </div>
+                            <div class="min-w-0">
+                                <p class="text-sm sm:text-base font-black text-slate-900 dark:text-white font-space truncate"><?php echo htmlspecialchars($vol['name']); ?></p>
+                                <p class="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 mt-0.5"><?php echo htmlspecialchars($vol['team']); ?></p>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                <?php endfor; ?>
+            </div>
+        </div>
+    </div>
+</section>
+<?php endif; ?>
 <!-- Client-Side Scripts for Community Day Post & Registration Arena -->
 <script>
 let hasRegisteredForCommunityDay = <?= $isRegistered ? 'true' : 'false' ?> || localStorage.getItem('sbg_community_day_registered') === '1';

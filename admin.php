@@ -21,6 +21,10 @@ $partnerUploadDir = 'public/images/partners/';
 if (!is_dir($partnerUploadDir)) {
     mkdir($partnerUploadDir, 0755, true);
 }
+$volunteerUploadDir = 'public/images/volunteers/';
+if (!is_dir($volunteerUploadDir)) {
+    mkdir($volunteerUploadDir, 0755, true);
+}
 $swagUploadDir = 'public/images/swags/';
 if (!is_dir($swagUploadDir)) {
     mkdir($swagUploadDir, 0755, true);
@@ -358,7 +362,76 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $stmt->execute([$partner_id]);
             $success = "Partner removed successfully.";
 
-        } elseif ($action === 'add_swag') {
+        } elseif ($action === 'add_volunteer') {
+            $name = trim($_POST['name']);
+            $team = trim($_POST['team']);
+            $photoPath = ''; // default fallback
+
+            if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
+                $filename = time() . '_' . basename($_FILES['photo']['name']);
+                $targetFile = $volunteerUploadDir . $filename;
+                if (move_uploaded_file($_FILES['photo']['tmp_name'], $targetFile)) {
+                     $photoPath = $targetFile;
+                }
+            }
+            
+            if (!empty($photoPath)) {
+              $stmt = $db->prepare("INSERT INTO `volunteers` (`name`, `team`, `photo`) VALUES (?, ?, ?)");
+              $stmt->execute([$name, $team, $photoPath]);
+
+              $success = "Volunteer '$name' added successfully.";
+            } else {
+              $error = "Please upload a volunteer photo.";
+            }
+            
+        } elseif ($action === 'delete_volunteer') {
+            $volunteer_id = intval($_POST['volunteer_id']);
+            
+            $stmt = $db->prepare("DELETE FROM `volunteers` WHERE `id` = ?");
+            $stmt->execute([$volunteer_id]);
+            $success = "Volunteer removed successfully.";
+
+        } elseif ($action === 'edit_volunteer') {
+            $volunteer_id = intval($_POST['volunteer_id']);
+            $name = trim($_POST['name'] ?? '');
+            $team = trim($_POST['team'] ?? '');
+            $allowed_volunteer_teams = ['Technical', 'Event Management', 'Media & Publicity', 'Graphics & Design'];
+
+            if ($name === '') {
+                $error = "Volunteer name is required.";
+            } elseif (!in_array($team, $allowed_volunteer_teams, true)) {
+                $error = "Please select a valid volunteer team.";
+            } else {
+                $newPhotoPath = '';
+                if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
+                    $ext = strtolower(pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION));
+                    if (!in_array($ext, ['png', 'jpg', 'jpeg', 'webp'], true)) {
+                        $error = "Photo must be PNG, JPG, JPEG, or WEBP.";
+                    } else {
+                        $filename = time() . '_' . basename($_FILES['photo']['name']);
+                        $targetFile = $volunteerUploadDir . $filename;
+                        if (move_uploaded_file($_FILES['photo']['tmp_name'], $targetFile)) {
+                            $newPhotoPath = $targetFile;
+                        } else {
+                            $error = "Failed to upload the new photo.";
+                        }
+                    }
+                }
+
+                if (empty($error)) {
+                    if ($newPhotoPath !== '') {
+                        $stmt = $db->prepare("UPDATE `volunteers` SET `name` = ?, `team` = ?, `photo` = ? WHERE `id` = ?");
+                        $stmt->execute([$name, $team, $newPhotoPath, $volunteer_id]);
+                    } else {
+                        // No new photo uploaded: keep the existing photo untouched
+                        $stmt = $db->prepare("UPDATE `volunteers` SET `name` = ?, `team` = ? WHERE `id` = ?");
+                        $stmt->execute([$name, $team, $volunteer_id]);
+                    }
+                    $success = "Volunteer '$name' updated successfully.";
+                }
+            }
+
+            } elseif ($action === 'add_swag') {
             $name = trim($_POST['name']);
             $points = floatval($_POST['points']);
             $description = trim($_POST['description']);
@@ -598,6 +671,9 @@ $total_community_signups = 582 + count($all_event_signups);
         </button>
         <button type="button" data-tab="partners-tab" onclick="switchTab('partners-tab')" id="partners-tab-btn" class="tab-btn rounded-full px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white cursor-pointer relative z-20 transition-all">
             Campus Partners
+        </button>
+        <button type="button" data-tab="volunteers-tab" onclick="switchTab('volunteers-tab')" id="volunteers-tab-btn" class="tab-btn rounded-full px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white cursor-pointer relative z-20 transition-all">
+            Campus Volunteers
         </button>
         <button type="button" data-tab="highlights-tab" onclick="switchTab('highlights-tab')" id="highlights-tab-btn" class="tab-btn rounded-full px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white cursor-pointer relative z-20 transition-all">
             Month Spotlights
@@ -1155,6 +1231,91 @@ $total_community_signups = 582 + count($all_event_signups);
         </div>
     </div>
 
+     <!-- 7. CAMPUS VOLUNTEERS TAB -->
+    <div id="volunteers-tab" class="tab-content hidden space-y-8">
+        <div class="grid gap-8 lg:grid-cols-3">
+            <!-- Form: Add Volunteers -->
+            <div class="lg:col-span-1 rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.02] p-6 shadow-md hover-glow-card">
+                <h3 class="text-lg font-black text-slate-900 dark:text-white font-space mb-4">Add New Volunteer</h3>
+                <form action="admin.php" method="POST" enctype="multipart/form-data" class="space-y-4">
+                    <input type="hidden" name="action" value="add_volunteer">
+                <!-- Volunteer Name -->
+                    <div>
+                        <label class="block text-[9px] font-black uppercase text-slate-500 tracking-wider mb-1">Volunteer Name</label>
+                        <input type="text" name="name" required placeholder="Enter volunteer name" class="form-input w-full rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-4 py-2.5 text-xs text-slate-900 dark:text-white outline-none focus:border-purple-500">
+                    </div>
+                <!-- Volunteer Team -->
+                    <div>
+                        <label class="block text-[9px] font-black uppercase text-slate-500 tracking-wider mb-1">Volunteer Team</label>
+                         <select name="team" required class="form-input w-full rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-4 py-2.5 text-xs text-slate-900 dark:text-white outline-none focus:border-purple-500">
+                          
+                          <option value="">Select Team</option>
+                          <option value="Technical">Technical</option>
+                          <option value="Event Management">Event Management</option>
+                          <option value="Media & Publicity">Media & Publicity</option>
+                          <option value="Graphics & Design">Graphics & Design</option>
+
+                        </select>                    
+                    </div>
+                 <!-- Volunteer Photo -->
+                    <div>
+                        <label class="block text-[9px] font-black uppercase text-slate-500 tracking-wider mb-1">Volunteer Photo Upload</label>
+                        <input type="file" name="photo" required accept=".png,.jpg,.jpeg,.webp" class="form-input w-full rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-4 py-2 text-xs text-slate-900 dark:text-white outline-none focus:border-purple-500">
+                        <span class="block text-[8px] text-slate-500 mt-1">Accepts PNG, JPG, JPEG, or WEBP.</span>
+                    </div>
+                    
+                    <button type="submit" class="w-full rounded-full bg-purple-600 hover:bg-purple-500 py-3 text-xs font-black uppercase tracking-wider text-white transition-all shadow-md shadow-purple-600/20 cursor-pointer">
+                        Add Volunteer
+                    </button>
+                </form>
+            </div>
+
+            <!-- List Volunteers -->
+            <div class="lg:col-span-2 rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.02] p-6 shadow-md">
+                <h3 class="text-lg font-black text-slate-900 dark:text-white font-space mb-4">Current Volunteers (<?php echo count($volunteers); ?>)</h3>
+                
+                <div class="space-y-4 max-h-[500px] overflow-y-auto pr-2 no-scrollbar">
+                    <?php if (empty($volunteers)): ?>
+                        <p class="text-xs text-slate-500 italic">No volunteers added yet.</p>
+                    <?php else: ?>
+                        <?php foreach ($volunteers as $volunteer): ?>
+                            <div class="flex items-center justify-between gap-4 rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.01] p-4 text-left">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-14 h-14 flex items-center justify-center shrink-0 border border-slate-200 dark:border-white/20 bg-white dark:bg-white rounded-2xl overflow-hidden p-2 shadow-sm">
+                                        <img src="<?php echo htmlspecialchars($volunteer['photo']); ?>" alt="" class="max-w-full max-h-full object-contain">
+                                    </div>
+                                    <div>
+                                        <h4 class="text-sm font-bold text-slate-900 dark:text-white"><?php echo htmlspecialchars($volunteer['name']); ?></h4>
+                                        <p class="text-[10px] text-purple-500 font-semibold"><?php echo htmlspecialchars($volunteer['team']); ?></p>
+                                        <p class="text-[9px] text-slate-500 font-mono truncate max-w-xs sm:max-w-md"><?php echo htmlspecialchars($volunteer['photo']); ?></p>
+                                    </div>
+                                </div>
+
+                                                                <div class="flex items-center gap-2 shrink-0">
+                                    <button type="button"
+                                            data-id="<?php echo $volunteer['id']; ?>"
+                                            data-name="<?php echo htmlspecialchars($volunteer['name'], ENT_QUOTES, 'UTF-8'); ?>"
+                                            data-team="<?php echo htmlspecialchars($volunteer['team'], ENT_QUOTES, 'UTF-8'); ?>"
+                                            onclick="openEditVolunteerModal(this)"
+                                            class="rounded-full bg-purple-600/10 border border-purple-500/20 hover:bg-purple-600/20 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-purple-600 dark:text-purple-400 cursor-pointer transition-colors">
+                                        Edit
+                                    </button>
+                                    <form action="admin.php" method="POST" onsubmit="return confirm('Delete volunteer \'<?php echo htmlspecialchars(addslashes($volunteer['name'])); ?>\'?');">
+                                        <input type="hidden" name="action" value="delete_volunteer">
+                                        <input type="hidden" name="volunteer_id" value="<?php echo $volunteer['id']; ?>">
+                                        <button type="submit" class="rounded-full bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-red-500 cursor-pointer">
+                                            Delete
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 2.5 AWS SWAGS CATALOG TAB -->
     <div id="swags-tab" class="tab-content hidden space-y-8">
         <div class="grid gap-8 lg:grid-cols-3">
@@ -1527,6 +1688,50 @@ $total_community_signups = 582 + count($all_event_signups);
     </div>
 </div>
 
+<!-- Edit Volunteer Modal overlay -->
+<div id="edit-volunteer-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity duration-300">
+    <div class="w-full max-w-md rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0c0817] p-6 shadow-2xl relative text-left">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-black text-slate-900 dark:text-white font-space">Edit Volunteer</h3>
+            <button type="button" onclick="closeEditVolunteerModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-lg cursor-pointer">✕</button>
+        </div>
+        <form action="admin.php" method="POST" enctype="multipart/form-data" class="space-y-4">
+            <input type="hidden" name="action" value="edit_volunteer">
+            <input type="hidden" name="volunteer_id" id="edit-volunteer-id">
+
+            <div>
+                <label class="block text-[9px] font-black uppercase text-slate-500 tracking-wider mb-1">Volunteer Name</label>
+                <input type="text" name="name" id="edit-volunteer-name" required class="form-input w-full rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-4 py-2.5 text-xs text-slate-900 dark:text-white outline-none focus:border-purple-500">
+            </div>
+
+            <div>
+                <label class="block text-[9px] font-black uppercase text-slate-500 tracking-wider mb-1">Volunteer Team</label>
+                <select name="team" id="edit-volunteer-team" required class="form-input w-full rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0d0a15] px-4 py-2.5 text-xs text-slate-900 dark:text-white outline-none focus:border-purple-500">
+                    <option value="Technical">Technical</option>
+                    <option value="Event Management">Event Management</option>
+                    <option value="Media & Publicity">Media & Publicity</option>
+                    <option value="Graphics & Design">Graphics & Design</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-[9px] font-black uppercase text-slate-500 tracking-wider mb-1">Replace Photo (Optional)</label>
+                <input type="file" name="photo" accept=".png,.jpg,.jpeg,.webp" class="form-input w-full rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-4 py-2 text-xs text-slate-900 dark:text-white outline-none focus:border-purple-500">
+                <span class="block text-[8px] text-slate-500 mt-1">Leave empty to keep the current photo.</span>
+            </div>
+
+            <div class="flex gap-2.5 pt-2">
+                <button type="submit" class="flex-grow rounded-full bg-purple-600 hover:bg-purple-500 py-2.5 text-xs font-black uppercase tracking-wider text-white transition-all cursor-pointer shadow-md shadow-purple-600/20">
+                    Save Volunteer Changes
+                </button>
+                <button type="button" onclick="closeEditVolunteerModal()" class="rounded-full border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-zinc-400 text-center cursor-pointer">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Edit Swag Modal overlay -->
 <div id="edit-swag-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity duration-300">
     <div class="w-full max-w-md rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0c0817] p-6 shadow-2xl relative text-left">
@@ -1828,6 +2033,23 @@ if (selectAllCheckbox) {
             }
         });
     });
+}
+
+// Edit Volunteer Modal Handlers
+function openEditVolunteerModal(btn) {
+    document.getElementById('edit-volunteer-id').value = btn.getAttribute('data-id');
+    document.getElementById('edit-volunteer-name').value = btn.getAttribute('data-name');
+    document.getElementById('edit-volunteer-team').value = btn.getAttribute('data-team');
+
+    const modal = document.getElementById('edit-volunteer-modal');
+    modal.style.display = 'flex';
+    modal.classList.remove('hidden');
+}
+
+function closeEditVolunteerModal() {
+    const modal = document.getElementById('edit-volunteer-modal');
+    modal.style.display = 'none';
+    modal.classList.add('hidden');
 }
 
 // Edit Swag Modal Handlers
