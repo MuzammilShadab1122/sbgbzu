@@ -563,6 +563,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     $error = "Failed to award swag: " . $e->getMessage();
                 }
             }
+        } elseif ($action === 'delete_event_signup') {
+            $signup_id = intval($_POST['signup_id'] ?? 0);
+            if ($signup_id > 0) {
+                $stmt = $db->prepare("DELETE FROM `event_signups` WHERE `id` = ?");
+                $stmt->execute([$signup_id]);
+                $success = "Event attendee registration removed successfully.";
+            }
         }
         
         // Refresh variables by reloading db data
@@ -572,6 +579,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $error = "Error: " . $e->getMessage();
     }
 }
+
+// Fetch Community Day signups
+$all_event_signups = [];
+try {
+    $all_event_signups = $db->query("SELECT * FROM `event_signups` ORDER BY `id` DESC")->fetchAll();
+} catch (Exception $e) {}
+$total_community_signups = 582 + count($all_event_signups);
 ?>
 
 <div class="mx-auto max-w-[1440px] px-4 sm:px-6 pb-24 pt-8 lg:px-8">
@@ -588,9 +602,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             <h2 class="mt-2 text-3xl sm:text-5xl font-black text-slate-900 dark:text-white leading-none font-space"><span class="text-glow-gradient">Lead Operations</span> Panel</h2>
             <p class="mt-4 max-w-2xl text-xs sm:text-sm leading-relaxed text-slate-500 dark:text-zinc-400 font-medium">Add members, update points, release upcoming events, publish notices, and announce spotlights.</p>
         </div>
-        <a href="logout.php" class="rounded-full bg-red-500/10 border border-red-500/20 px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-red-600 dark:text-red-400 hover:bg-red-500/20 transition-all text-center self-start sm:self-center shrink-0">
-            Sign Out
-        </a>
+        <div class="flex items-center gap-3 self-start sm:self-center shrink-0">
+            <a href="quiz.php?view=admin" class="rounded-full bg-purple-600 hover:bg-purple-500 px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-white transition-all shadow-md shadow-purple-600/30 flex items-center gap-1.5">
+                ⚡ Quiz Generator & Settings
+            </a>
+            <a href="logout.php" class="rounded-full bg-red-500/10 border border-red-500/20 px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-red-600 dark:text-red-400 hover:bg-red-500/20 transition-all text-center">
+                Sign Out
+            </a>
+        </div>
     </div>
 
     <!-- Notification Banners -->
@@ -671,6 +690,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         <button type="button" data-tab="posts-tab" onclick="switchTab('posts-tab')" id="posts-tab-btn" class="tab-btn rounded-full px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white cursor-pointer relative z-20 transition-all">
             Notices & Blog
         </button>
+        <button type="button" data-tab="signups-tab" onclick="switchTab('signups-tab')" id="signups-tab-btn" class="tab-btn rounded-full px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white cursor-pointer relative z-20 transition-all flex items-center gap-1.5">
+            Event Signups (<?= $total_community_signups ?>)
+        </button>
+        <a href="quiz.php?view=admin" class="rounded-full px-5 py-2.5 text-[10px] font-black uppercase tracking-widest bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-600/20 hover:opacity-90 cursor-pointer relative z-20 transition-all flex items-center gap-1.5 shrink-0">
+            ⚡ Quiz Generator & Settings
+        </a>
     </div>
 
     <!-- 1. MEMBERS DIRECTORY TAB -->
@@ -1514,6 +1539,88 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     <?php endforeach; ?>
                 <?php endif; ?>
             </div>
+        </div>
+    </div>
+
+    <!-- 9. COMMUNITY DAY SIGNUPS TAB -->
+    <div id="signups-tab" class="tab-content hidden space-y-8">
+        <div class="rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.02] p-6 sm:p-8 shadow-md">
+            
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-white/10 pb-6 mb-6">
+                <div>
+                    <span class="rounded-full bg-purple-500/10 border border-purple-500/20 px-3 py-1 text-[9px] font-black uppercase tracking-widest text-purple-600 dark:text-purple-400">
+                        Event Attendee Database
+                    </span>
+                    <h3 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white font-space mt-1">
+                        AWS Student Community Day Multan 2026 Signups
+                    </h3>
+                    <p class="text-xs text-slate-500 dark:text-zinc-400 mt-1">
+                        Live registrations entered through the Home Page registration form connected to SignUp database.
+                    </p>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <div class="text-right">
+                        <span class="text-[9px] font-black uppercase tracking-wider text-slate-400 block">Total Live Count</span>
+                        <span class="text-2xl font-black text-purple-600 dark:text-purple-400 font-space"><?= $total_community_signups ?></span>
+                        <span class="text-[9px] text-slate-400 block font-bold">582 Base + <?= count($all_event_signups) ?> New</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Signups Table -->
+            <?php if (empty($all_event_signups)): ?>
+                <div class="p-8 text-center rounded-2xl bg-slate-50/50 dark:bg-white/[0.01] border border-dashed border-slate-200 dark:border-white/10">
+                    <p class="text-sm font-bold text-slate-700 dark:text-zinc-300">No new user registrations entered yet.</p>
+                    <p class="text-xs text-slate-400 mt-1">When users fill out the Home Page form, their Name, Email, and University appear here.</p>
+                </div>
+            <?php else: ?>
+                <div class="overflow-x-auto no-scrollbar">
+                    <table class="w-full text-left text-xs">
+                        <thead>
+                            <tr class="border-b border-slate-200 dark:border-white/10 text-[9px] font-black uppercase tracking-wider text-slate-400">
+                                <th class="py-3 px-3">#</th>
+                                <th class="py-3 px-3">Full Name</th>
+                                <th class="py-3 px-3">Email Address</th>
+                                <th class="py-3 px-3">University</th>
+                                <th class="py-3 px-3">Registered Date</th>
+                                <th class="py-3 px-3 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 dark:divide-white/5">
+                            <?php foreach ($all_event_signups as $idx => $signup): ?>
+                                <tr>
+                                    <td class="py-3 px-3 font-mono text-slate-400 text-[10px]">
+                                        <?= $idx + 1 ?>
+                                    </td>
+                                    <td class="py-3 px-3 font-bold text-slate-900 dark:text-white">
+                                        <?= htmlspecialchars($signup['name']) ?>
+                                    </td>
+                                    <td class="py-3 px-3 text-purple-600 dark:text-purple-400 font-mono text-[11px]">
+                                        <?= htmlspecialchars($signup['email']) ?>
+                                    </td>
+                                    <td class="py-3 px-3 text-slate-600 dark:text-zinc-300">
+                                        <?= htmlspecialchars($signup['university']) ?>
+                                    </td>
+                                    <td class="py-3 px-3 text-slate-400 text-[10px]">
+                                        <?= date('M d, Y - h:i A', strtotime($signup['created_at'])) ?>
+                                    </td>
+                                    <td class="py-3 px-3 text-right">
+                                        <form method="POST" onsubmit="return confirm('Remove this attendee registration?');" class="inline">
+                                            <input type="hidden" name="action" value="delete_event_signup">
+                                            <input type="hidden" name="signup_id" value="<?= (int)$signup['id'] ?>">
+                                            <button type="submit" class="rounded-full bg-red-500/10 border border-red-500/20 px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-red-500 hover:bg-red-500/20 transition-all cursor-pointer">
+                                                Delete
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
+
         </div>
     </div>
 </div>

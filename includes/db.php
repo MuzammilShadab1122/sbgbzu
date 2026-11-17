@@ -107,6 +107,17 @@ try {
         ) ENGINE=InnoDB;");
     }
 
+    // Event Signups & Registrations Table (AWS Student Community Day & Other Events)
+    $db->exec("CREATE TABLE IF NOT EXISTS `event_signups` (
+        `id` INT AUTO_INCREMENT PRIMARY KEY,
+        `name` VARCHAR(255) NOT NULL,
+        `email` VARCHAR(255) NOT NULL,
+        `university` VARCHAR(255) NOT NULL,
+        `event_name` VARCHAR(255) DEFAULT 'AWS Student Community Day Multan 2026',
+        `ip_address` VARCHAR(100) DEFAULT NULL,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB;");
+
     // Dynamic column migrations for existing databases
     try {
         $colCheck = $db->query("SHOW COLUMNS FROM `members` LIKE 'member_code'")->rowCount();
