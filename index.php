@@ -592,7 +592,6 @@ $stat_rows = [
     </div>
 </section>
 
-
 <!-- 2. BUILDERS SPOTLIGHT PANEL (STAR & GRINDERS HIGHLIGHT AT THE TOP) -->
 <section class="px-4 sm:px-6 py-4">
     <div class="mx-auto max-w-[1440px]">
@@ -879,9 +878,13 @@ $stat_rows = [
                                     <img src="<?php echo htmlspecialchars($vol['photo']); ?>" alt="<?php echo htmlspecialchars($vol['name']); ?>" loading="lazy" draggable="false" class="h-full w-full object-cover object-top">
                                 </div>
                             </div>
-                            <div class="vc-info mt-4 min-h-[60px] px-1 text-center">
+                            <div class="vc-info mt-4 min-h-[84px] px-1 text-center">
                                 <h4 class="text-sm sm:text-base font-black text-slate-900 dark:text-white font-space leading-tight"><?php echo htmlspecialchars($vol['name']); ?></h4>
                                 <span class="mt-2 inline-block rounded-full bg-purple-500/10 border border-purple-500/20 px-3 py-1 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-purple-600 dark:text-purple-300"><?php echo htmlspecialchars($vol['team']); ?></span>
+                                                                <?php if (!empty($vol['university'])): ?>
+                                    <p class="mt-2 text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-zinc-400 leading-tight"><?php echo htmlspecialchars($vol['university']); ?></p>
+                                <?php endif; ?>
+
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -963,7 +966,7 @@ $stat_rows = [
     <div class="mx-auto max-w-[1440px] px-4 sm:px-6">
         <div class="text-center mb-2">
             <p class="text-[9px] font-black uppercase tracking-[0.28em] text-purple-600 dark:text-purple-400">Voices From Our Meetups</p>
-            <h3 class="mt-1 text-xl sm:text-2xl font-black text-slate-900 dark:text-white font-space">Meetup Guests</h3>
+            <h3 class="mt-1 text-xl sm:text-2xl font-black text-slate-900 dark:text-white font-space">Meet Our Speakers</h3>
         </div>
 
         <div id="guest-carousel" class="relative" tabindex="0" aria-label="Meetup guests carousel">

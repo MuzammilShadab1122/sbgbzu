@@ -60,6 +60,7 @@ try {
             `id` INT AUTO_INCREMENT PRIMARY KEY,
             `name` VARCHAR(255) NOT NULL,
             `team` VARCHAR(100) NOT NULL,
+            `university` VARCHAR(255) NOT NULL DEFAULT '',
             `photo` VARCHAR(255) NOT NULL
         ) ENGINE=InnoDB;");
     }
