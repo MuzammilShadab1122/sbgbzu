@@ -64,6 +64,17 @@ try {
         ) ENGINE=InnoDB;");
     }
 
+     // Check if meetup_guests table exists, if not, create it
+    $guestsTableExists = $db->query("SHOW TABLES LIKE 'meetup_guests'")->rowCount() > 0;
+    if (!$guestsTableExists) {
+        $db->exec("CREATE TABLE IF NOT EXISTS `meetup_guests` (
+            `id` INT AUTO_INCREMENT PRIMARY KEY,
+            `name` VARCHAR(255) NOT NULL,
+            `designation` VARCHAR(255) NOT NULL,
+            `photo` VARCHAR(255) NOT NULL
+        ) ENGINE=InnoDB;");
+    }
+
     // Check if swags table exists, if not, create and seed default AWS Swags
     $swagsTableExists = $db->query("SHOW TABLES LIKE 'swags'")->rowCount() > 0;
     if (!$swagsTableExists) {
@@ -323,6 +334,11 @@ try {
     // 1.9 Fetch all campus volunteers
     $stmt = $db->query("SELECT * FROM `volunteers` ORDER BY `id` ASC");
     $volunteers = $stmt->fetchAll(); 
+
+    // 1.10 Fetch all campus meetup guests
+    $stmt = $db->query("SELECT * FROM `meetup_guests` ORDER BY `id` ASC");
+    $meetup_guests = $stmt->fetchAll();
+
     
     // 2. Fetch all events sorted by ID descending
     $stmt = $db->query("SELECT * FROM `events` ORDER BY `id` DESC");
@@ -376,6 +392,7 @@ try {
     $badges = [];
     $partners = [];
     $volunteers = [];
+    $meetup_guests = [];
     $swags = [];
     $swag_requests = [];
     $announcements = [];

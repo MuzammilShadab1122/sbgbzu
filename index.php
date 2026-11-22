@@ -834,49 +834,223 @@ $stat_rows = [
     </div>
 </section>
 
-<!-- 5.5 CAMPUS VOLUNTEERS MARQUEE (same style as partners) -->
-<?php if (!empty($volunteers)):
-    // Repeat the list so one "half" is always wider than the screen, then use two identical halves for a seamless loop
-    $vol_half = [];
-    $vol_repeat = max(1, (int)ceil(8 / count($volunteers)));
-    for ($r = 0; $r < $vol_repeat; $r++) {
-        $vol_half = array_merge($vol_half, $volunteers);
-    }
-    $vol_duration = count($vol_half) * 4; // seconds for one full loop
-?>
+<!-- 5.5 CAMPUS VOLUNTEERS CAROUSEL (center spotlight) -->
+<?php if (!empty($volunteers)): ?>
 <style>
-    @keyframes vol-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-    .vol-track { display: flex; width: max-content; animation: vol-marquee var(--vol-duration, 30s) linear infinite; }
+    .vc-track { transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1); will-change: transform; }
+    .vc-item { opacity: 0.45; transform: translateY(0) scale(0.82); transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.5s ease; cursor: pointer; }
+    .vc-item.is-active { opacity: 1; transform: translateY(-10px) scale(1.06); cursor: default; z-index: 5; }
+    .vc-item .vc-photo { transition: box-shadow 0.5s ease, border-color 0.5s ease; }
+    .vc-item.is-active .vc-photo { border-color: rgba(168, 85, 247, 0.7); box-shadow: 0 20px 45px -12px rgba(147, 51, 234, 0.55); }
+    .vc-item .vc-info { opacity: 0; transform: translateY(8px); transition: opacity 0.5s ease 0.1s, transform 0.5s ease 0.1s; }
+    .vc-item.is-active .vc-info { opacity: 1; transform: translateY(0); }
     @media (prefers-reduced-motion: reduce) {
-        .vol-track { animation: none; }
-        .vol-marquee { overflow-x: auto; }
+        .vc-track, .vc-item, .vc-item .vc-photo, .vc-item .vc-info { transition: none; }
     }
 </style>
-<section class="border-t border-slate-200 dark:border-white/10 py-12 overflow-hidden bg-slate-100/50 dark:bg-black/20">
+<section class="border-t border-slate-200 dark:border-white/10 py-8 bg-slate-100/50 dark:bg-black/20 overflow-hidden">
     <div class="mx-auto max-w-[1440px] px-4 sm:px-6">
-        <div class="mb-6">
-            <p class="text-center text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">Campus Volunteers</p>
+        <div class="text-center mb-2">
+            <p class="text-[9px] font-black uppercase tracking-[0.28em] text-purple-600 dark:text-purple-400">The People Behind The Scenes</p>
+            <h3 class="mt-1 text-xl sm:text-2xl font-black text-slate-900 dark:text-white font-space">Campus Volunteers</h3>
         </div>
 
-        <div class="vol-marquee w-full overflow-hidden relative py-4 rounded-3xl">
-            <div class="vol-track items-center" style="--vol-duration: <?php echo (int)$vol_duration; ?>s;">
-                <?php for ($copy = 0; $copy < 2; $copy++): ?>
-                    <?php foreach ($vol_half as $vol): ?>
-                        <div class="flex items-center gap-4 rounded-3xl border border-slate-200 dark:border-white/10 bg-white/90 dark:bg-white/[0.03] px-6 py-4 min-w-[280px] sm:min-w-[320px] shrink-0 mr-6 shadow-md backdrop-blur-md hover:border-purple-500/40 transition-all">
-                            <div class="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-white p-0 overflow-hidden flex items-center justify-center shrink-0 border border-slate-200/80 dark:border-white/20 shadow-sm">
-                                <img src="<?php echo htmlspecialchars($vol['photo']); ?>" alt="<?php echo htmlspecialchars($vol['name']); ?>" class="h-full w-full object-cover">
+        <div id="vol-carousel" class="relative" tabindex="0" aria-label="Campus volunteers carousel">
+            <?php if (count($volunteers) > 1): ?>
+                <button type="button" id="vc-prev" aria-label="Previous volunteer" class="absolute left-0 sm:left-4 top-[34%] z-20 h-9 w-9 sm:h-11 sm:w-11 rounded-full border border-purple-500/50 bg-purple-600/10 hover:bg-purple-600 hover:text-white text-purple-600 dark:text-purple-300 flex items-center justify-center backdrop-blur-md transition-all cursor-pointer">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
+                </button>
+                <button type="button" id="vc-next" aria-label="Next volunteer" class="absolute right-0 sm:right-4 top-[34%] z-20 h-9 w-9 sm:h-11 sm:w-11 rounded-full border border-purple-500/50 bg-purple-600/10 hover:bg-purple-600 hover:text-white text-purple-600 dark:text-purple-300 flex items-center justify-center backdrop-blur-md transition-all cursor-pointer">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+                </button>
+            <?php endif; ?>
+
+            <div class="vc-viewport overflow-hidden pt-8 pb-2 [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
+                <div class="vc-track relative flex w-max">
+                    <?php foreach ($volunteers as $vol): ?>
+                        <div class="vc-item shrink-0 w-[110px] sm:w-[130px] md:w-[150px] mx-2 sm:mx-3">
+                            <div class="relative">
+                                <!-- decorative circles -->
+                                <span class="absolute -left-4 top-2 h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-purple-300/60 dark:bg-purple-900/60"></span>
+                                <span class="absolute -right-2 -top-2 h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-purple-400/80"></span>
+                                <span class="absolute -right-3 bottom-3 h-7 w-7 sm:h-9 sm:w-9 rounded-full bg-purple-500/70"></span>
+
+                                <div class="vc-photo relative aspect-[3/4] w-full overflow-hidden rounded-[999px] border-2 border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-[#0c0817]">
+                                    <img src="<?php echo htmlspecialchars($vol['photo']); ?>" alt="<?php echo htmlspecialchars($vol['name']); ?>" loading="lazy" draggable="false" class="h-full w-full object-cover object-top">
+                                </div>
                             </div>
-                            <div class="min-w-0">
-                                <p class="text-sm sm:text-base font-black text-slate-900 dark:text-white font-space truncate"><?php echo htmlspecialchars($vol['name']); ?></p>
-                                <p class="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 mt-0.5"><?php echo htmlspecialchars($vol['team']); ?></p>
+                            <div class="vc-info mt-4 min-h-[60px] px-1 text-center">
+                                <h4 class="text-sm sm:text-base font-black text-slate-900 dark:text-white font-space leading-tight"><?php echo htmlspecialchars($vol['name']); ?></h4>
+                                <span class="mt-2 inline-block rounded-full bg-purple-500/10 border border-purple-500/20 px-3 py-1 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-purple-600 dark:text-purple-300"><?php echo htmlspecialchars($vol['team']); ?></span>
                             </div>
                         </div>
                     <?php endforeach; ?>
-                <?php endfor; ?>
+                </div>
             </div>
         </div>
     </div>
 </section>
+
+<script>
+(function () {
+    const root = document.getElementById('vol-carousel');
+    if (!root) return;
+    const viewport = root.querySelector('.vc-viewport');
+    const track = root.querySelector('.vc-track');
+    const items = Array.prototype.slice.call(track.querySelectorAll('.vc-item'));
+    const prev = document.getElementById('vc-prev');
+    const next = document.getElementById('vc-next');
+    const n = items.length;
+    let i = Math.floor((n - 1) / 2); // start on the middle volunteer
+
+    function update() {
+        const el = items[i];
+        const center = el.offsetLeft + el.offsetWidth / 2;
+        track.style.transform = 'translateX(' + (viewport.clientWidth / 2 - center) + 'px)';
+        items.forEach(function (item, k) {
+            item.classList.toggle('is-active', k === i);
+        });
+    }
+    function go(k) {
+        i = (k + n) % n;
+        update();
+    }
+
+    if (prev) prev.addEventListener('click', function () { go(i - 1); });
+    if (next) next.addEventListener('click', function () { go(i + 1); });
+    items.forEach(function (item, k) {
+        item.addEventListener('click', function () { if (k !== i) go(k); });
+    });
+
+    // Keyboard arrows
+    root.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowLeft') go(i - 1);
+        if (e.key === 'ArrowRight') go(i + 1);
+    });
+
+    // Touch swipe
+    let startX = null;
+    viewport.addEventListener('touchstart', function (e) { startX = e.touches[0].clientX; }, { passive: true });
+    viewport.addEventListener('touchend', function (e) {
+        if (startX === null) return;
+        const dx = e.changedTouches[0].clientX - startX;
+        if (Math.abs(dx) > 40) go(dx < 0 ? i + 1 : i - 1);
+        startX = null;
+    }, { passive: true });
+
+    window.addEventListener('resize', update);
+    window.addEventListener('load', update);
+    update();
+})();
+</script>
+<?php endif; ?>
+
+<!-- 5.6 MEETUP GUESTS CAROUSEL (center spotlight, compact) -->
+<?php if (!empty($meetup_guests)): ?>
+<style>
+    .mgc-track { transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1); will-change: transform; }
+    .mgc-item { opacity: 0.45; transform: translateY(0) scale(0.82); transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.5s ease; cursor: pointer; }
+    .mgc-item.is-active { opacity: 1; transform: translateY(-10px) scale(1.06); cursor: default; z-index: 5; }
+    .mgc-item .mgc-photo { transition: box-shadow 0.5s ease, border-color 0.5s ease; }
+    .mgc-item.is-active .mgc-photo { border-color: rgba(168, 85, 247, 0.7); box-shadow: 0 20px 45px -12px rgba(147, 51, 234, 0.55); }
+    .mgc-item .mgc-info { opacity: 0; transform: translateY(8px); transition: opacity 0.5s ease 0.1s, transform 0.5s ease 0.1s; }
+    .mgc-item.is-active .mgc-info { opacity: 1; transform: translateY(0); }
+    @media (prefers-reduced-motion: reduce) {
+        .mgc-track, .mgc-item, .mgc-item .mgc-photo, .mgc-item .mgc-info { transition: none; }
+    }
+</style>
+<section class="border-t border-slate-200 dark:border-white/10 py-8 bg-slate-100/50 dark:bg-black/20 overflow-hidden">
+    <div class="mx-auto max-w-[1440px] px-4 sm:px-6">
+        <div class="text-center mb-2">
+            <p class="text-[9px] font-black uppercase tracking-[0.28em] text-purple-600 dark:text-purple-400">Voices From Our Meetups</p>
+            <h3 class="mt-1 text-xl sm:text-2xl font-black text-slate-900 dark:text-white font-space">Meetup Guests</h3>
+        </div>
+
+        <div id="guest-carousel" class="relative" tabindex="0" aria-label="Meetup guests carousel">
+            <?php if (count($meetup_guests) > 1): ?>
+                <button type="button" id="mgc-prev" aria-label="Previous guest" class="absolute left-0 sm:left-4 top-[34%] z-20 h-9 w-9 sm:h-11 sm:w-11 rounded-full border border-purple-500/50 bg-purple-600/10 hover:bg-purple-600 hover:text-white text-purple-600 dark:text-purple-300 flex items-center justify-center backdrop-blur-md transition-all cursor-pointer">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
+                </button>
+                <button type="button" id="mgc-next" aria-label="Next guest" class="absolute right-0 sm:right-4 top-[34%] z-20 h-9 w-9 sm:h-11 sm:w-11 rounded-full border border-purple-500/50 bg-purple-600/10 hover:bg-purple-600 hover:text-white text-purple-600 dark:text-purple-300 flex items-center justify-center backdrop-blur-md transition-all cursor-pointer">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+                </button>
+            <?php endif; ?>
+
+            <div class="mgc-viewport overflow-hidden pt-8 pb-2 [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
+                <div class="mgc-track relative flex w-max">
+                    <?php foreach ($meetup_guests as $guest): ?>
+                        <div class="mgc-item shrink-0 w-[110px] sm:w-[130px] md:w-[150px] mx-2 sm:mx-3">
+                            <div class="relative">
+                                <span class="absolute -left-4 top-2 h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-purple-300/60 dark:bg-purple-900/60"></span>
+                                <span class="absolute -right-2 -top-2 h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-purple-400/80"></span>
+                                <span class="absolute -right-3 bottom-3 h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-purple-500/70"></span>
+
+                                <div class="mgc-photo relative aspect-[3/4] w-full overflow-hidden rounded-[999px] border-2 border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-[#0c0817]">
+                                    <img src="<?php echo htmlspecialchars($guest['photo']); ?>" alt="<?php echo htmlspecialchars($guest['name']); ?>" loading="lazy" draggable="false" class="h-full w-full object-cover object-top">
+                                </div>
+                            </div>
+                            <div class="mgc-info mt-4 min-h-[60px] px-1 text-center">
+                                <h4 class="text-sm sm:text-base font-black text-slate-900 dark:text-white font-space leading-tight"><?php echo htmlspecialchars($guest['name']); ?></h4>
+                                <span class="mt-2 inline-block rounded-full bg-purple-500/10 border border-purple-500/20 px-3 py-1 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-purple-600 dark:text-purple-300"><?php echo htmlspecialchars($guest['designation']); ?></span>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+(function () {
+    const root = document.getElementById('guest-carousel');
+    if (!root) return;
+    const viewport = root.querySelector('.mgc-viewport');
+    const track = root.querySelector('.mgc-track');
+    const items = Array.prototype.slice.call(track.querySelectorAll('.mgc-item'));
+    const prev = document.getElementById('mgc-prev');
+    const next = document.getElementById('mgc-next');
+    const n = items.length;
+    let i = Math.floor((n - 1) / 2); // start on the middle guest
+
+    function update() {
+        const el = items[i];
+        const center = el.offsetLeft + el.offsetWidth / 2;
+        track.style.transform = 'translateX(' + (viewport.clientWidth / 2 - center) + 'px)';
+        items.forEach(function (item, k) {
+            item.classList.toggle('is-active', k === i);
+        });
+    }
+    function go(k) {
+        i = (k + n) % n;
+        update();
+    }
+
+    if (prev) prev.addEventListener('click', function () { go(i - 1); });
+    if (next) next.addEventListener('click', function () { go(i + 1); });
+    items.forEach(function (item, k) {
+        item.addEventListener('click', function () { if (k !== i) go(k); });
+    });
+
+    root.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowLeft') go(i - 1);
+        if (e.key === 'ArrowRight') go(i + 1);
+    });
+
+    let startX = null;
+    viewport.addEventListener('touchstart', function (e) { startX = e.touches[0].clientX; }, { passive: true });
+    viewport.addEventListener('touchend', function (e) {
+        if (startX === null) return;
+        const dx = e.changedTouches[0].clientX - startX;
+        if (Math.abs(dx) > 40) go(dx < 0 ? i + 1 : i - 1);
+        startX = null;
+    }, { passive: true });
+
+    window.addEventListener('resize', update);
+    window.addEventListener('load', update);
+    update();
+})();
+</script>
 <?php endif; ?>
 <!-- Client-Side Scripts for Community Day Post & Registration Arena -->
 <script>

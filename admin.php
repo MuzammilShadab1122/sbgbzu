@@ -25,6 +25,10 @@ $volunteerUploadDir = 'public/images/volunteers/';
 if (!is_dir($volunteerUploadDir)) {
     mkdir($volunteerUploadDir, 0755, true);
 }
+$guestUploadDir = 'public/images/guests/';
+if (!is_dir($guestUploadDir)) {
+    mkdir($guestUploadDir, 0755, true);
+}
 $swagUploadDir = 'public/images/swags/';
 if (!is_dir($swagUploadDir)) {
     mkdir($swagUploadDir, 0755, true);
@@ -429,6 +433,76 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     }
                     $success = "Volunteer '$name' updated successfully.";
                 }
+            } 
+
+                    } elseif ($action === 'add_guest') {
+            $name = trim($_POST['name'] ?? '');
+            $designation = trim($_POST['designation'] ?? '');
+            $photoPath = '';
+
+            if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
+                $ext = strtolower(pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION));
+                if (in_array($ext, ['png', 'jpg', 'jpeg', 'webp'], true)) {
+                    $filename = time() . '_' . basename($_FILES['photo']['name']);
+                    $targetFile = $guestUploadDir . $filename;
+                    if (move_uploaded_file($_FILES['photo']['tmp_name'], $targetFile)) {
+                        $photoPath = $targetFile;
+                    }
+                }
+            }
+
+            if ($name === '' || $designation === '') {
+                $error = "Guest name and designation are required.";
+            } elseif ($photoPath === '') {
+                $error = "Please upload a valid guest photo (PNG, JPG, JPEG, or WEBP).";
+            } else {
+                $stmt = $db->prepare("INSERT INTO `meetup_guests` (`name`, `designation`, `photo`) VALUES (?, ?, ?)");
+                $stmt->execute([$name, $designation, $photoPath]);
+                $success = "Guest '$name' added successfully.";
+            }
+
+        } elseif ($action === 'delete_guest') {
+            $guest_id = intval($_POST['guest_id']);
+
+            $stmt = $db->prepare("DELETE FROM `meetup_guests` WHERE `id` = ?");
+            $stmt->execute([$guest_id]);
+            $success = "Guest removed successfully.";
+
+        } elseif ($action === 'edit_guest') {
+            $guest_id = intval($_POST['guest_id']);
+            $name = trim($_POST['name'] ?? '');
+            $designation = trim($_POST['designation'] ?? '');
+
+            if ($name === '' || $designation === '') {
+                $error = "Guest name and designation are required.";
+            } else {
+                $newPhotoPath = '';
+                if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
+                    $ext = strtolower(pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION));
+                    if (!in_array($ext, ['png', 'jpg', 'jpeg', 'webp'], true)) {
+                        $error = "Photo must be PNG, JPG, JPEG, or WEBP.";
+                    } else {
+                        $filename = time() . '_' . basename($_FILES['photo']['name']);
+                        $targetFile = $guestUploadDir . $filename;
+                        if (move_uploaded_file($_FILES['photo']['tmp_name'], $targetFile)) {
+                            $newPhotoPath = $targetFile;
+                        } else {
+                            $error = "Failed to upload the new photo.";
+                        }
+                    }
+                }
+
+                if (empty($error)) {
+                    if ($newPhotoPath !== '') {
+                        $stmt = $db->prepare("UPDATE `meetup_guests` SET `name` = ?, `designation` = ?, `photo` = ? WHERE `id` = ?");
+                        $stmt->execute([$name, $designation, $newPhotoPath, $guest_id]);
+                    } else {
+                        // No new photo uploaded: keep the existing photo untouched
+                        $stmt = $db->prepare("UPDATE `meetup_guests` SET `name` = ?, `designation` = ? WHERE `id` = ?");
+                        $stmt->execute([$name, $designation, $guest_id]);
+                    }
+                    $success = "Guest '$name' updated successfully.";
+                }
             }
 
             } elseif ($action === 'add_swag') {
@@ -674,6 +748,9 @@ $total_community_signups = 582 + count($all_event_signups);
         </button>
         <button type="button" data-tab="volunteers-tab" onclick="switchTab('volunteers-tab')" id="volunteers-tab-btn" class="tab-btn rounded-full px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white cursor-pointer relative z-20 transition-all">
             Campus Volunteers
+        </button>
+                <button type="button" data-tab="guests-tab" onclick="switchTab('guests-tab')" id="guests-tab-btn" class="tab-btn rounded-full px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white cursor-pointer relative z-20 transition-all">
+            Meetup Guests
         </button>
         <button type="button" data-tab="highlights-tab" onclick="switchTab('highlights-tab')" id="highlights-tab-btn" class="tab-btn rounded-full px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white cursor-pointer relative z-20 transition-all">
             Month Spotlights
@@ -1316,6 +1393,83 @@ $total_community_signups = 582 + count($all_event_signups);
         </div>
     </div>
 
+        <!-- MEETUP GUESTS TAB -->
+    <div id="guests-tab" class="tab-content hidden space-y-8">
+        <div class="grid gap-8 lg:grid-cols-3">
+            <!-- Form: Add Guest -->
+            <div class="lg:col-span-1 rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.02] p-6 shadow-md hover-glow-card">
+                <h3 class="text-lg font-black text-slate-900 dark:text-white font-space mb-4">Add New Guest</h3>
+                <form action="admin.php" method="POST" enctype="multipart/form-data" class="space-y-4">
+                    <input type="hidden" name="action" value="add_guest">
+
+                    <div>
+                        <label class="block text-[9px] font-black uppercase text-slate-500 tracking-wider mb-1">Guest Name</label>
+                        <input type="text" name="name" required placeholder="Enter guest name" class="form-input w-full rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-4 py-2.5 text-xs text-slate-900 dark:text-white outline-none focus:border-purple-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-[9px] font-black uppercase text-slate-500 tracking-wider mb-1">Designation</label>
+                        <input type="text" name="designation" required placeholder="e.g. Cloud Engineer, AWS" class="form-input w-full rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-4 py-2.5 text-xs text-slate-900 dark:text-white outline-none focus:border-purple-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-[9px] font-black uppercase text-slate-500 tracking-wider mb-1">Guest Photo Upload</label>
+                        <input type="file" name="photo" required accept=".png,.jpg,.jpeg,.webp" class="form-input w-full rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-4 py-2 text-xs text-slate-900 dark:text-white outline-none focus:border-purple-500">
+                        <span class="block text-[8px] text-slate-500 mt-1">Accepts PNG, JPG, JPEG, or WEBP.</span>
+                    </div>
+
+                    <button type="submit" class="w-full rounded-full bg-purple-600 hover:bg-purple-500 py-3 text-xs font-black uppercase tracking-wider text-white transition-all shadow-md shadow-purple-600/20 cursor-pointer">
+                        Add Guest
+                    </button>
+                </form>
+            </div>
+
+            <!-- List Guests -->
+            <div class="lg:col-span-2 rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.02] p-6 shadow-md">
+                <h3 class="text-lg font-black text-slate-900 dark:text-white font-space mb-4">Current Guests (<?php echo count($meetup_guests); ?>)</h3>
+
+                <div class="space-y-4 max-h-[500px] overflow-y-auto pr-2 no-scrollbar">
+                    <?php if (empty($meetup_guests)): ?>
+                        <p class="text-xs text-slate-500 italic">No guests added yet.</p>
+                    <?php else: ?>
+                        <?php foreach ($meetup_guests as $guest): ?>
+                            <div class="flex items-center justify-between gap-4 rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.01] p-4 text-left">
+                                <div class="flex items-center gap-4 min-w-0">
+                                    <div class="w-14 h-14 flex items-center justify-center shrink-0 border border-slate-200 dark:border-white/20 bg-white rounded-2xl overflow-hidden shadow-sm">
+                                        <img src="<?php echo htmlspecialchars($guest['photo']); ?>" alt="" class="h-full w-full object-cover">
+                                    </div>
+                                    <div class="min-w-0">
+                                        <h4 class="text-sm font-bold text-slate-900 dark:text-white truncate"><?php echo htmlspecialchars($guest['name']); ?></h4>
+                                        <p class="text-[10px] text-purple-500 font-semibold truncate"><?php echo htmlspecialchars($guest['designation']); ?></p>
+                                        <p class="text-[9px] text-slate-500 font-mono truncate max-w-xs sm:max-w-md"><?php echo htmlspecialchars($guest['photo']); ?></p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center gap-2 shrink-0">
+                                    <button type="button"
+                                            data-id="<?php echo $guest['id']; ?>"
+                                            data-name="<?php echo htmlspecialchars($guest['name'], ENT_QUOTES, 'UTF-8'); ?>"
+                                            data-designation="<?php echo htmlspecialchars($guest['designation'], ENT_QUOTES, 'UTF-8'); ?>"
+                                            onclick="openEditGuestModal(this)"
+                                            class="rounded-full bg-purple-600/10 border border-purple-500/20 hover:bg-purple-600/20 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-purple-600 dark:text-purple-400 cursor-pointer transition-colors">
+                                        Edit
+                                    </button>
+                                    <form action="admin.php" method="POST" onsubmit="return confirm('Delete guest \'<?php echo htmlspecialchars(addslashes($guest['name'])); ?>\'?');">
+                                        <input type="hidden" name="action" value="delete_guest">
+                                        <input type="hidden" name="guest_id" value="<?php echo $guest['id']; ?>">
+                                        <button type="submit" class="rounded-full bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-red-500 cursor-pointer">
+                                            Delete
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 2.5 AWS SWAGS CATALOG TAB -->
     <div id="swags-tab" class="tab-content hidden space-y-8">
         <div class="grid gap-8 lg:grid-cols-3">
@@ -1732,6 +1886,45 @@ $total_community_signups = 582 + count($all_event_signups);
     </div>
 </div>
 
+<!-- Edit Guest Modal overlay -->
+<div id="edit-guest-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity duration-300">
+    <div class="w-full max-w-md rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0c0817] p-6 shadow-2xl relative text-left">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-black text-slate-900 dark:text-white font-space">Edit Guest</h3>
+            <button type="button" onclick="closeEditGuestModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-lg cursor-pointer">✕</button>
+        </div>
+        <form action="admin.php" method="POST" enctype="multipart/form-data" class="space-y-4">
+            <input type="hidden" name="action" value="edit_guest">
+            <input type="hidden" name="guest_id" id="edit-guest-id">
+
+            <div>
+                <label class="block text-[9px] font-black uppercase text-slate-500 tracking-wider mb-1">Guest Name</label>
+                <input type="text" name="name" id="edit-guest-name" required class="form-input w-full rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-4 py-2.5 text-xs text-slate-900 dark:text-white outline-none focus:border-purple-500">
+            </div>
+
+            <div>
+                <label class="block text-[9px] font-black uppercase text-slate-500 tracking-wider mb-1">Designation</label>
+                <input type="text" name="designation" id="edit-guest-designation" required class="form-input w-full rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-4 py-2.5 text-xs text-slate-900 dark:text-white outline-none focus:border-purple-500">
+            </div>
+
+            <div>
+                <label class="block text-[9px] font-black uppercase text-slate-500 tracking-wider mb-1">Replace Photo (Optional)</label>
+                <input type="file" name="photo" accept=".png,.jpg,.jpeg,.webp" class="form-input w-full rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-4 py-2 text-xs text-slate-900 dark:text-white outline-none focus:border-purple-500">
+                <span class="block text-[8px] text-slate-500 mt-1">Leave empty to keep the current photo.</span>
+            </div>
+
+            <div class="flex gap-2.5 pt-2">
+                <button type="submit" class="flex-grow rounded-full bg-purple-600 hover:bg-purple-500 py-2.5 text-xs font-black uppercase tracking-wider text-white transition-all cursor-pointer shadow-md shadow-purple-600/20">
+                    Save Guest Changes
+                </button>
+                <button type="button" onclick="closeEditGuestModal()" class="rounded-full border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-zinc-400 text-center cursor-pointer">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Edit Swag Modal overlay -->
 <div id="edit-swag-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity duration-300">
     <div class="w-full max-w-md rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0c0817] p-6 shadow-2xl relative text-left">
@@ -1968,6 +2161,24 @@ if (memberFilterInput) {
         });
     });
 }
+
+// Edit Guest Modal Handlers
+function openEditGuestModal(btn) {
+    document.getElementById('edit-guest-id').value = btn.getAttribute('data-id');
+    document.getElementById('edit-guest-name').value = btn.getAttribute('data-name');
+    document.getElementById('edit-guest-designation').value = btn.getAttribute('data-designation');
+
+    const modal = document.getElementById('edit-guest-modal');
+    modal.style.display = 'flex';
+    modal.classList.remove('hidden');
+}
+
+function closeEditGuestModal() {
+    const modal = document.getElementById('edit-guest-modal');
+    modal.style.display = 'none';
+    modal.classList.add('hidden');
+}
+
 
 // Edit Builder Profile & Credentials Modal
 function toggleDegradeModal(btn) {
