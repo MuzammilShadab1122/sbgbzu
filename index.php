@@ -525,6 +525,7 @@ $stat_rows = [
                         <input type="hidden" name="action" value="event_signup">
                         <input type="hidden" name="is_ajax" value="1">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['attendee_form_csrf'], ENT_QUOTES, 'UTF-8') ?>">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['attendee_form_csrf'], ENT_QUOTES, 'UTF-8') ?>">
                         <input type="hidden" name="event_name" value="AWS Student Community Day Multan 2026">
 
                         <div>
