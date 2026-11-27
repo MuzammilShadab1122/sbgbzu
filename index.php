@@ -995,6 +995,9 @@ $stat_rows = [
                             <div class="mgc-info mt-4 min-h-[60px] px-1 text-center">
                                 <h4 class="text-sm sm:text-base font-black text-slate-900 dark:text-white font-space leading-tight"><?php echo htmlspecialchars($guest['name']); ?></h4>
                                 <span class="mt-2 inline-block rounded-full bg-purple-500/10 border border-purple-500/20 px-3 py-1 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-purple-600 dark:text-purple-300"><?php echo htmlspecialchars($guest['designation']); ?></span>
+                                <?php if (!empty($guest['company'])): ?>
+                                    <p class="mt-1 text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-zinc-400 leading-tight"><?php echo htmlspecialchars($guest['company']); ?></p>
+                                <?php endif; ?>
                             </div>
                         </div>
                     <?php endforeach; ?>
