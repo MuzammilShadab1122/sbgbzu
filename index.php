@@ -142,24 +142,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'apply
                     $srcX = (int) max(0, ($srcW - $cropW) / 2); $srcY = (int) max(0, ($srcH - $cropH) / 2);
                     $photoLayer = imagecreatetruecolor($photoW, $photoH);
                     imagecopyresampled($photoLayer, $photo, 0, 0, $srcX, $srcY, $photoW, $photoH, $cropW, $cropH);
-                    $white = imagecolorallocate($photoLayer, 255, 255, 255);
-                    // Cut the photo back to a smooth rounded shape at both upper corners.
-                    $cornerRadius = 34;
+                    // Make the photo layer transparent outside rounded top corners.
+                    // This reveals the original card template beneath the photo (not white patches).
+                    $cornerRadius = 52;
+                    $transparent = imagecolorallocatealpha($photoLayer, 0, 0, 0, 127);
+                    imagealphablending($photoLayer, false);
+                    imagesavealpha($photoLayer, true);
+
                     for ($y = 0; $y < $cornerRadius; $y++) {
                         for ($x = 0; $x < $cornerRadius; $x++) {
-                            $leftDx = $cornerRadius - $x;
                             $dy = $cornerRadius - $y;
-                            if (($leftDx * $leftDx + $dy * $dy) > ($cornerRadius * $cornerRadius)) {
-                                imagesetpixel($photoLayer, $x, $y, $white);
+
+                            $leftDx = $cornerRadius - $x;
+                            $leftDistance = sqrt(($leftDx * $leftDx) + ($dy * $dy));
+                            if ($leftDistance > $cornerRadius - 1) {
+                                $alpha = (int) min(127, max(0, round(127 * ($leftDistance - ($cornerRadius - 1)))));
+                                $pixel = imagecolorallocatealpha($photoLayer, 0, 0, 0, $alpha);
+                                imagesetpixel($photoLayer, $x, $y, $pixel);
                             }
 
                             $rightX = $photoW - $cornerRadius + $x;
-                            $rightDx = $x;
-                            if (($rightDx * $rightDx + $dy * $dy) > ($cornerRadius * $cornerRadius)) {
-                                imagesetpixel($photoLayer, $rightX, $y, $white);
+                            $rightDistance = sqrt(($x * $x) + ($dy * $dy));
+                            if ($rightDistance > $cornerRadius - 1) {
+                                $alpha = (int) min(127, max(0, round(127 * ($rightDistance - ($cornerRadius - 1)))));
+                                $pixel = imagecolorallocatealpha($photoLayer, 0, 0, 0, $alpha);
+                                imagesetpixel($photoLayer, $rightX, $y, $pixel);
                             }
                         }
                     }
+
+                    imagealphablending($photoLayer, true);
+                    imagealphablending($card, true);
                     imagecopy($card, $photoLayer, $photoX, $photoY, 0, 0, $photoW, $photoH);
 
                     // Replace the website URL with the attendee name in the left panel beside the QR code.
