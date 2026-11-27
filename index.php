@@ -1504,9 +1504,11 @@ function handleAttendeeCardSubmit(e) {
                 preview.src = data.preview_url + '&v=' + Date.now();
                 download.href = data.download_url;
                 result.classList.remove('hidden');
+                form.classList.add('hidden');
                 result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
         } else if (alertBox) {
+            form.classList.remove('hidden');
             alertBox.className = 'rounded-2xl p-4 text-xs font-bold bg-red-500/20 border border-red-500/40 text-red-300 leading-relaxed';
             alertBox.textContent = data.error || 'We could not verify your registration.';
             alertBox.classList.remove('hidden');
@@ -1516,6 +1518,7 @@ function handleAttendeeCardSubmit(e) {
         console.error(error);
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<span>Verify & Generate Card</span>';
+        form.classList.remove('hidden');
         if (alertBox) {
             alertBox.className = 'rounded-2xl p-4 text-xs font-bold bg-red-500/20 border border-red-500/40 text-red-300 leading-relaxed';
             alertBox.textContent = 'Network error. Please try again.';
