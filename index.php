@@ -143,11 +143,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'apply
                     $photoLayer = imagecreatetruecolor($photoW, $photoH);
                     imagecopyresampled($photoLayer, $photo, 0, 0, $srcX, $srcY, $photoW, $photoH, $cropW, $cropH);
                     $white = imagecolorallocate($photoLayer, 255, 255, 255);
-                    // Preserve the rounded top corners of the template's photo window.
-                    imagefilledrectangle($photoLayer, 0, 0, 34, 34, $white);
-                    imagefilledellipse($photoLayer, 0, 0, 68, 68, $white);
-                    imagefilledrectangle($photoLayer, $photoW - 34, 0, $photoW, 34, $white);
-                    imagefilledellipse($photoLayer, $photoW, 0, 68, 68, $white);
+                    // Cut the photo back to a smooth rounded shape at both upper corners.
+                    $cornerRadius = 34;
+                    for ($y = 0; $y < $cornerRadius; $y++) {
+                        for ($x = 0; $x < $cornerRadius; $x++) {
+                            $leftDx = $cornerRadius - $x;
+                            $dy = $cornerRadius - $y;
+                            if (($leftDx * $leftDx + $dy * $dy) > ($cornerRadius * $cornerRadius)) {
+                                imagesetpixel($photoLayer, $x, $y, $white);
+                            }
+
+                            $rightX = $photoW - $cornerRadius + $x;
+                            $rightDx = $x;
+                            if (($rightDx * $rightDx + $dy * $dy) > ($cornerRadius * $cornerRadius)) {
+                                imagesetpixel($photoLayer, $rightX, $y, $white);
+                            }
+                        }
+                    }
                     imagecopy($card, $photoLayer, $photoX, $photoY, 0, 0, $photoW, $photoH);
 
                     // Replace the website URL with the attendee name in the left panel beside the QR code.
