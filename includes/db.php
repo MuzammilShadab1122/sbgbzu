@@ -149,6 +149,16 @@ try {
         KEY `idx_attendee_eligibility_status` (`status`)
     ) ENGINE=InnoDB;");
 
+    // Store the first successful attendee name against each verified email.
+    try {
+        $nameColumn = $db->query("SHOW COLUMNS FROM `attendee_eligibility` LIKE 'attendee_name'")->rowCount();
+        if ($nameColumn === 0) {
+            $db->exec("ALTER TABLE `attendee_eligibility` ADD COLUMN `attendee_name` VARCHAR(210) NULL AFTER `email`");
+        }
+    } catch (Exception $e) {
+        error_log('Attendee name-lock migration failed: ' . $e->getMessage());
+    }
+
     // Attendee Card Requests Table (AWS Student Community Day Virtual Pass Applications)
     $db->exec("CREATE TABLE IF NOT EXISTS `attendee_card_requests` (
         `id` INT AUTO_INCREMENT PRIMARY KEY,
