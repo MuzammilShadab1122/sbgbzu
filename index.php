@@ -82,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'apply
     if (!hash_equals($_SESSION['attendee_form_csrf'], $csrf)) {
         $msg = 'Your form session expired. Refresh the page and try again.';
         $respond(['success' => false, 'error' => $msg]); $card_app_error = $msg;
-    } elseif ($name === '' || mb_strlen($name) > 70 || !filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 254) {
+    } elseif ($name === '' || strlen($name) > 210 || !filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 254) {
         $msg = 'Please enter a valid name and email address.';
         $respond(['success' => false, 'error' => $msg]); $card_app_error = $msg;
     } elseif (!isset($_FILES['image']) || $_FILES['image']['error'] !== UPLOAD_ERR_OK) {
