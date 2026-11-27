@@ -440,6 +440,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         } elseif ($action === 'add_guest') {
             $name = trim($_POST['name'] ?? '');
             $designation = trim($_POST['designation'] ?? '');
+            $company = trim($_POST['company'] ?? '');
             $photoPath = '';
 
             if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
@@ -458,8 +459,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             } elseif ($photoPath === '') {
                 $error = "Please upload a valid guest photo (PNG, JPG, JPEG, or WEBP).";
             } else {
-                $stmt = $db->prepare("INSERT INTO `meetup_guests` (`name`, `designation`, `photo`) VALUES (?, ?, ?)");
-                $stmt->execute([$name, $designation, $photoPath]);
+                $stmt = $db->prepare("INSERT INTO `meetup_guests` (`name`, `designation`, `company`, `photo`) VALUES (?, ?, ?, ?)");
+                $stmt->execute([$name, $designation, $company, $photoPath]);
                 $success = "Guest '$name' added successfully.";
             }
 
@@ -474,6 +475,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $guest_id = intval($_POST['guest_id']);
             $name = trim($_POST['name'] ?? '');
             $designation = trim($_POST['designation'] ?? '');
+            $company = trim($_POST['company'] ?? '');
 
             if ($name === '' || $designation === '') {
                 $error = "Guest name and designation are required.";
@@ -496,12 +498,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
                 if (empty($error)) {
                     if ($newPhotoPath !== '') {
-                        $stmt = $db->prepare("UPDATE `meetup_guests` SET `name` = ?, `designation` = ?, `photo` = ? WHERE `id` = ?");
-                        $stmt->execute([$name, $designation, $newPhotoPath, $guest_id]);
+                        $stmt = $db->prepare("UPDATE `meetup_guests` SET `name` = ?, `designation` = ?, `company` = ?, `photo` = ? WHERE `id` = ?");
+                        $stmt->execute([$name, $designation, $company, $newPhotoPath, $guest_id]);
                     } else {
                         // No new photo uploaded: keep the existing photo untouched
-                        $stmt = $db->prepare("UPDATE `meetup_guests` SET `name` = ?, `designation` = ? WHERE `id` = ?");
-                        $stmt->execute([$name, $designation, $guest_id]);
+                        $stmt = $db->prepare("UPDATE `meetup_guests` SET `name` = ?, `designation` = ?, `company` = ? WHERE `id` = ?");
+                        $stmt->execute([$name, $designation, $company, $guest_id]);
                     }
                     $success = "Guest '$name' updated successfully.";
                 }
@@ -1625,6 +1627,12 @@ $total_community_signups = 582 + count($all_event_signups);
                     </div>
 
                     <div>
+                        <label class="block text-[9px] font-black uppercase text-slate-500 tracking-wider mb-1">Company</label>
+                        <input type="text" name="company" placeholder="e.g. Amazon Web Services"
+                            class="form-input w-full rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-4 py-2.5 text-xs text-slate-900 dark:text-white outline-none focus:border-purple-500">
+                    </div>
+
+                    <div>
                         <label class="block text-[9px] font-black uppercase text-slate-500 tracking-wider mb-1">Guest
                             Photo Upload</label>
                         <input type="file" name="photo" required accept=".png,.jpg,.jpeg,.webp"
@@ -1665,6 +1673,11 @@ $total_community_signups = 582 + count($all_event_signups);
                                         <p class="text-[10px] text-purple-500 font-semibold truncate">
                                             <?php echo htmlspecialchars($guest['designation']); ?>
                                         </p>
+                                        <?php if (!empty($guest['company'])): ?>
+                                            <p class="text-[10px] text-slate-500 dark:text-zinc-400 truncate">
+                                                <?php echo htmlspecialchars($guest['company']); ?>
+                                            </p>
+                                        <?php endif; ?>
                                         <p class="text-[9px] text-slate-500 font-mono truncate max-w-xs sm:max-w-md">
                                             <?php echo htmlspecialchars($guest['photo']); ?>
                                         </p>
@@ -1675,6 +1688,7 @@ $total_community_signups = 582 + count($all_event_signups);
                                     <button type="button" data-id="<?php echo $guest['id']; ?>"
                                         data-name="<?php echo htmlspecialchars($guest['name'], ENT_QUOTES, 'UTF-8'); ?>"
                                         data-designation="<?php echo htmlspecialchars($guest['designation'], ENT_QUOTES, 'UTF-8'); ?>"
+                                        data-company="<?php echo htmlspecialchars($guest['company'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
                                         onclick="openEditGuestModal(this)"
                                         class="rounded-full bg-purple-600/10 border border-purple-500/20 hover:bg-purple-600/20 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-purple-600 dark:text-purple-400 cursor-pointer transition-colors">
                                         Edit
@@ -2257,6 +2271,12 @@ $total_community_signups = 582 + count($all_event_signups);
             </div>
 
             <div>
+                <label class="block text-[9px] font-black uppercase text-slate-500 tracking-wider mb-1">Company</label>
+                <input type="text" name="company" id="edit-guest-company" placeholder="e.g. Amazon Web Services"
+                    class="form-input w-full rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-4 py-2.5 text-xs text-slate-900 dark:text-white outline-none focus:border-purple-500">
+            </div>
+
+            <div>
                 <label class="block text-[9px] font-black uppercase text-slate-500 tracking-wider mb-1">Replace Photo
                     (Optional)</label>
                 <input type="file" name="photo" accept=".png,.jpg,.jpeg,.webp"
@@ -2567,6 +2587,7 @@ $total_community_signups = 582 + count($all_event_signups);
         document.getElementById('edit-guest-id').value = btn.getAttribute('data-id');
         document.getElementById('edit-guest-name').value = btn.getAttribute('data-name');
         document.getElementById('edit-guest-designation').value = btn.getAttribute('data-designation');
+        document.getElementById('edit-guest-company').value = btn.getAttribute('data-company') || '';
 
         const modal = document.getElementById('edit-guest-modal');
         modal.style.display = 'flex';
