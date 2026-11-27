@@ -110,11 +110,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'apply
                     $respond(['success' => false, 'error' => $msg]); $card_app_error = $msg;
                 } else {
                     $photo = @imagecreatefromstring(file_get_contents($tmp));
-                    $templateInclude = __DIR__ . '/includes/attendee_card_template.php';
-                    if (!$photo || !is_file($templateInclude)) throw new RuntimeException('Photo or template could not be loaded.');
-                    require $templateInclude;
-                    $templateBytes = base64_decode($attendeeCardTemplateBase64, true);
-                    $card = $templateBytes !== false ? @imagecreatefromstring($templateBytes) : false;
+                    $templatePath = __DIR__ . '/public/images/attendee_cards/card_template.jpg';
+                    if (!$photo || !is_file($templatePath)) throw new RuntimeException('The attendee card template is not installed on the server.');
+                    $card = @imagecreatefromjpeg($templatePath);
                     if (!$card) throw new RuntimeException('Card template is invalid.');
 
                     $photoX = 584; $photoY = 570; $photoW = 570; $photoH = 620;
