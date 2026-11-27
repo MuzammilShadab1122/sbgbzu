@@ -103,12 +103,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'apply
             $respond(['success' => false, 'error' => $msg]); $card_app_error = $msg;
         } else {
             try {
-                $check = $db->prepare("SELECT id FROM attendee_eligibility WHERE email = ? AND status = 'verified' LIMIT 1");
+                // Lock the verified email row so concurrent requests cannot claim different names.
+                $db->beginTransaction();
+                $check = $db->prepare("SELECT id, attendee_name FROM attendee_eligibility WHERE email = ? AND status = 'verified' LIMIT 1 FOR UPDATE");
                 $check->execute([$email]);
-                if (!$check->fetchColumn()) {
+                $eligibility = $check->fetch(PDO::FETCH_ASSOC);
+                if (!$eligibility) {
+                    $db->rollBack();
                     $msg = 'We could not verify a paid registration for this email. Please contact the event administration team.';
                     $respond(['success' => false, 'error' => $msg]); $card_app_error = $msg;
                 } else {
+                    $normalizeName = static function (string $value): string {
+                        $value = preg_replace('/\\s+/u', ' ', trim($value));
+                        return function_exists('mb_strtolower') ? mb_strtolower($value, 'UTF-8') : strtolower($value);
+                    };
+                    $savedName = trim((string) ($eligibility['attendee_name'] ?? ''));
+                    if ($savedName !== '' && $normalizeName($savedName) !== $normalizeName($name)) {
+                        $db->rollBack();
+                        $msg = 'You are trying to cheat! This verified email is already locked to a different attendee name. Please use your own verified registration email and details.';
+                        $respond(['success' => false, 'error' => $msg]); $card_app_error = $msg;
+                    }
+                    if ($savedName === '') {
+                        $lockName = $db->prepare("UPDATE attendee_eligibility SET attendee_name = ? WHERE id = ? AND (attendee_name IS NULL OR attendee_name = '')");
+                        $lockName->execute([$name, $eligibility['id']]);
+                    }
                     $photo = @imagecreatefromstring(file_get_contents($tmp));
                     $templatePath = __DIR__ . '/public/images/attendee_cards/card_template.jpg';
                     if (!$photo || !is_file($templatePath)) throw new RuntimeException('The attendee card template is not installed on the server.');
@@ -197,6 +215,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'apply
                     $_SESSION['attendee_card_token'] = $token;
                     $_SESSION['attendee_card_file'] = $filename;
                     imagedestroy($photo); imagedestroy($photoLayer); imagedestroy($card);
+                    $db->commit();
                     $respond([
                         'success' => true,
                         'message' => 'Your payment is verified. Your attendee card is ready!',
@@ -206,6 +225,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'apply
                     $card_app_success = 'Your attendee card is ready.';
                 }
             } catch (Throwable $e) {
+                if ($db->inTransaction()) $db->rollBack();
                 error_log('Attendee card generation failed: ' . $e->getMessage());
                 $msg = 'We could not generate your card right now. Please try again later.';
                 $respond(['success' => false, 'error' => $msg]); $card_app_error = $msg;
