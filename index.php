@@ -115,7 +115,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'apply
                     $card = @imagecreatefromjpeg($templatePath);
                     if (!$card) throw new RuntimeException('Card template is invalid.');
 
-                    $photoX = 584; $photoY = 570; $photoW = 570; $photoH = 620;
+                    // Fit the uploaded portrait inside the upper photo window.
+                    // Reserve the bottom of the white card frame for the attendee name.
+                    $photoX = 584; $photoY = 570; $photoW = 570; $photoH = 520;
                     $srcW = imagesx($photo); $srcH = imagesy($photo);
                     $scale = max($photoW / $srcW, $photoH / $srcH);
                     $cropW = (int) round($photoW / $scale); $cropH = (int) round($photoH / $scale);
@@ -123,38 +125,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'apply
                     $photoLayer = imagecreatetruecolor($photoW, $photoH);
                     imagecopyresampled($photoLayer, $photo, 0, 0, $srcX, $srcY, $photoW, $photoH, $cropW, $cropH);
                     $white = imagecolorallocate($photoLayer, 255, 255, 255);
+                    // Preserve the rounded top corners of the template's photo window.
                     imagefilledrectangle($photoLayer, 0, 0, 34, 34, $white);
                     imagefilledellipse($photoLayer, 0, 0, 68, 68, $white);
                     imagefilledrectangle($photoLayer, $photoW - 34, 0, $photoW, 34, $white);
                     imagefilledellipse($photoLayer, $photoW, 0, 68, 68, $white);
                     imagecopy($card, $photoLayer, $photoX, $photoY, 0, 0, $photoW, $photoH);
 
-                    $panelWhite = imagecolorallocate($card, 255, 255, 255);
-                    imagefilledrectangle($card, 605, 1205, 965, 1370, $panelWhite);
-                    $ink = imagecolorallocate($card, 26, 12, 62);
+                    // The name goes below the photo, inside the existing white frame.
+                    // This leaves the template's URL, QR code and event details untouched.
+                    $nameBandWhite = imagecolorallocate($card, 255, 255, 255);
+                    imagefilledrectangle($card, 584, 1090, 1154, 1190, $nameBandWhite);
+                    $ink = imagecolorallocate($card, 55, 0, 125);
                     $font = null;
                     foreach (['/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', '/usr/share/fonts/truetype/liberation2/LiberationSans-Bold.ttf'] as $candidate) {
                         if (is_file($candidate)) { $font = $candidate; break; }
                     }
-                    $cleanName = preg_replace('/\s+/u', ' ', $name);
-                    $words = preg_split('/\s+/u', $cleanName);
-                    $lines = []; $line = '';
-                    foreach ($words as $word) {
-                        $candidate = $line === '' ? $word : $line . ' ' . $word;
-                        if ($font && $line !== '' && imagettfbbox(50, 0, $font, $candidate)[2] > 330) { $lines[] = $line; $line = $word; }
-                        else { $line = $candidate; }
-                    }
-                    if ($line !== '') $lines[] = $line;
-                    if (count($lines) > 2) {
-                        $splitAt = (int) ceil(count($words) / 2);
-                        $lines = [implode(' ', array_slice($words, 0, $splitAt)), implode(' ', array_slice($words, $splitAt))];
-                    }
+                    $cleanName = preg_replace('/\\s+/u', ' ', $name);
                     if ($font && function_exists('imagettftext')) {
-                        $fontSize = 50;
-                        foreach ($lines as $lineText) while ($fontSize > 28 && imagettfbbox($fontSize, 0, $font, $lineText)[2] > 330) $fontSize--;
-                        $baseY = count($lines) > 1 ? 1285 : 1320;
-                        foreach (array_slice($lines, 0, 2) as $i => $lineText) imagettftext($card, $fontSize, 0, 618, $baseY + ($i * 54), $ink, $font, $lineText);
-                    } else { imagestring($card, 5, 618, 1280, substr($cleanName, 0, 30), $ink); }
+                        $fontSize = 44;
+                        $maxTextWidth = 520;
+                        $box = imagettfbbox($fontSize, 0, $font, $cleanName);
+                        while ($fontSize > 28 && ($box[2] - $box[0]) > $maxTextWidth) {
+                            $fontSize--;
+                            $box = imagettfbbox($fontSize, 0, $font, $cleanName);
+                        }
+                        if (($box[2] - $box[0]) <= $maxTextWidth) {
+                            $textX = (int) round(869 - (($box[2] + $box[0]) / 2));
+                            imagettftext($card, $fontSize, 0, $textX, 1155, $ink, $font, $cleanName);
+                        } else {
+                            // Extremely long names: wrap into two centred lines.
+                            $words = preg_split('/\\s+/u', $cleanName);
+                            $lines = []; $line = '';
+                            foreach ($words as $word) {
+                                $candidate = $line === '' ? $word : $line . ' ' . $word;
+                                $candidateBox = imagettfbbox(32, 0, $font, $candidate);
+                                if ($line !== '' && ($candidateBox[2] - $candidateBox[0]) > $maxTextWidth) {
+                                    $lines[] = $line;
+                                    $line = $word;
+                                } else {
+                                    $line = $candidate;
+                                }
+                            }
+                            if ($line !== '') $lines[] = $line;
+                            foreach (array_slice($lines, 0, 2) as $i => $lineText) {
+                                $lineBox = imagettfbbox(32, 0, $font, $lineText);
+                                $textX = (int) round(869 - (($lineBox[2] + $lineBox[0]) / 2));
+                                imagettftext($card, 32, 0, $textX, 1130 + ($i * 42), $ink, $font, $lineText);
+                            }
+                        }
+                    } else {
+                        imagestring($card, 5, 760, 1135, substr($cleanName, 0, 35), $ink);
+                    }
 
                     $privateDir = dirname(__DIR__) . '/sbg-private/attendee_cards';
                     if (!is_dir($privateDir) && !mkdir($privateDir, 0750, true) && !is_dir($privateDir)) throw new RuntimeException('Could not create private card storage.');
