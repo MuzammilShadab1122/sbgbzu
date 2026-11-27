@@ -635,6 +635,7 @@ $stat_rows = [
             <form id="attendee-card-form" method="POST" enctype="multipart/form-data" onsubmit="handleAttendeeCardSubmit(event)" class="space-y-4">
                 <input type="hidden" name="action" value="apply_attendee_card">
                 <input type="hidden" name="is_ajax" value="1">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['attendee_form_csrf'], ENT_QUOTES, 'UTF-8') ?>">
 
                 <div>
                     <label class="block text-[10px] font-black uppercase tracking-wider text-slate-300 mb-1.5">
