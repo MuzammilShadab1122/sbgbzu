@@ -117,7 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'apply
 
                     // Fit the uploaded portrait inside the upper photo window.
                     // Reserve the bottom of the white card frame for the attendee name.
-                    $photoX = 657; $photoY = 641; $photoW = 641; $photoH = 585;
+                    $photoX = 657; $photoY = 641; $photoW = 641; $photoH = 739;
                     $srcW = imagesx($photo); $srcH = imagesy($photo);
                     $scale = max($photoW / $srcW, $photoH / $srcH);
                     $cropW = (int) round($photoW / $scale); $cropH = (int) round($photoH / $scale);
