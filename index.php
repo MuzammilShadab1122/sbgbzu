@@ -117,7 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'apply
 
                     // Fit the uploaded portrait inside the upper photo window.
                     // Reserve the bottom of the white card frame for the attendee name.
-                    $photoX = 584; $photoY = 570; $photoW = 570; $photoH = 520;
+                    $photoX = 657; $photoY = 641; $photoW = 641; $photoH = 585;
                     $srcW = imagesx($photo); $srcH = imagesy($photo);
                     $scale = max($photoW / $srcW, $photoH / $srcH);
                     $cropW = (int) round($photoW / $scale); $cropH = (int) round($photoH / $scale);
@@ -135,7 +135,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'apply
                     // The name goes below the photo, inside the existing white frame.
                     // This leaves the template's URL, QR code and event details untouched.
                     $nameBandWhite = imagecolorallocate($card, 255, 255, 255);
-                    imagefilledrectangle($card, 584, 1090, 1154, 1190, $nameBandWhite);
+                    imagefilledrectangle($card, 657, 1226, 1298, 1340, $nameBandWhite);
                     $ink = imagecolorallocate($card, 55, 0, 125);
                     $font = null;
                     foreach (['/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', '/usr/share/fonts/truetype/liberation2/LiberationSans-Bold.ttf'] as $candidate) {
@@ -143,23 +143,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'apply
                     }
                     $cleanName = preg_replace('/\\s+/u', ' ', $name);
                     if ($font && function_exists('imagettftext')) {
-                        $fontSize = 44;
-                        $maxTextWidth = 520;
+                        $fontSize = 50;
+                        $maxTextWidth = 585;
                         $box = imagettfbbox($fontSize, 0, $font, $cleanName);
                         while ($fontSize > 28 && ($box[2] - $box[0]) > $maxTextWidth) {
                             $fontSize--;
                             $box = imagettfbbox($fontSize, 0, $font, $cleanName);
                         }
                         if (($box[2] - $box[0]) <= $maxTextWidth) {
-                            $textX = (int) round(869 - (($box[2] + $box[0]) / 2));
-                            imagettftext($card, $fontSize, 0, $textX, 1155, $ink, $font, $cleanName);
+                            $textX = (int) round(978 - (($box[2] + $box[0]) / 2));
+                            imagettftext($card, $fontSize, 0, $textX, 1300, $ink, $font, $cleanName);
                         } else {
                             // Extremely long names: wrap into two centred lines.
                             $words = preg_split('/\\s+/u', $cleanName);
                             $lines = []; $line = '';
                             foreach ($words as $word) {
                                 $candidate = $line === '' ? $word : $line . ' ' . $word;
-                                $candidateBox = imagettfbbox(32, 0, $font, $candidate);
+                                $candidateBox = imagettfbbox(36, 0, $font, $candidate);
                                 if ($line !== '' && ($candidateBox[2] - $candidateBox[0]) > $maxTextWidth) {
                                     $lines[] = $line;
                                     $line = $word;
@@ -169,13 +169,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'apply
                             }
                             if ($line !== '') $lines[] = $line;
                             foreach (array_slice($lines, 0, 2) as $i => $lineText) {
-                                $lineBox = imagettfbbox(32, 0, $font, $lineText);
-                                $textX = (int) round(869 - (($lineBox[2] + $lineBox[0]) / 2));
-                                imagettftext($card, 32, 0, $textX, 1130 + ($i * 42), $ink, $font, $lineText);
+                                $lineBox = imagettfbbox(36, 0, $font, $lineText);
+                                $textX = (int) round(978 - (($lineBox[2] + $lineBox[0]) / 2));
+                                imagettftext($card, 36, 0, $textX, 1275 + ($i * 47), $ink, $font, $lineText);
                             }
                         }
                     } else {
-                        imagestring($card, 5, 760, 1135, substr($cleanName, 0, 35), $ink);
+                        imagestring($card, 5, 870, 1280, substr($cleanName, 0, 35), $ink);
                     }
 
                     $privateDir = dirname(__DIR__) . '/sbg-private/attendee_cards';
