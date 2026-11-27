@@ -64,104 +64,122 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 }
 
-// Handle Attendee Card Application Submission
+// Handle verified attendee card generation.
 $card_app_error = '';
 $card_app_success = '';
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'apply_attendee_card') {
-    $name = trim($_POST['name'] ?? '');
-    $email = trim($_POST['email'] ?? '');
-    $ip = $_SERVER['REMOTE_ADDR'] ?? '';
-
+if (empty($_SESSION['attendee_form_csrf'])) {
+    $_SESSION['attendee_form_csrf'] = bin2hex(random_bytes(32));
+}
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'apply_attendee_card') {
     $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') || isset($_POST['is_ajax']);
+    $respond = static function (array $payload) use ($isAjax): void {
+        if ($isAjax) { header('Content-Type: application/json; charset=utf-8'); echo json_encode($payload); exit; }
+    };
+    $name = trim((string) ($_POST['name'] ?? ''));
+    $email = strtolower(trim((string) ($_POST['email'] ?? '')));
+    $csrf = (string) ($_POST['csrf_token'] ?? '');
 
-    if (empty($name) || empty($email)) {
-        $msg = 'Please enter your Full Name and Email Address.';
-        if ($isAjax) {
-            header('Content-Type: application/json');
-            echo json_encode(['success' => false, 'error' => $msg]);
-            exit;
-        }
-        $card_app_error = $msg;
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $msg = 'Please enter a valid email address.';
-        if ($isAjax) {
-            header('Content-Type: application/json');
-            echo json_encode(['success' => false, 'error' => $msg]);
-            exit;
-        }
-        $card_app_error = $msg;
+    if (!hash_equals($_SESSION['attendee_form_csrf'], $csrf)) {
+        $msg = 'Your form session expired. Refresh the page and try again.';
+        $respond(['success' => false, 'error' => $msg]); $card_app_error = $msg;
+    } elseif ($name === '' || mb_strlen($name) > 70 || !filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 254) {
+        $msg = 'Please enter a valid name and email address.';
+        $respond(['success' => false, 'error' => $msg]); $card_app_error = $msg;
     } elseif (!isset($_FILES['image']) || $_FILES['image']['error'] !== UPLOAD_ERR_OK) {
-        $msg = 'Please upload a photo for your attendee card.';
-        if ($isAjax) {
-            header('Content-Type: application/json');
-            echo json_encode(['success' => false, 'error' => $msg]);
-            exit;
-        }
-        $card_app_error = $msg;
+        $msg = 'Please upload a JPG, PNG or WEBP photo (maximum 5MB).';
+        $respond(['success' => false, 'error' => $msg]); $card_app_error = $msg;
     } else {
         $file = $_FILES['image'];
-        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-        $allowedExts = ['jpg', 'jpeg', 'png', 'webp'];
-
-        if (!in_array($ext, $allowedExts)) {
-            $msg = 'Invalid image format. Allowed formats: JPG, JPEG, PNG, WEBP.';
-            if ($isAjax) {
-                header('Content-Type: application/json');
-                echo json_encode(['success' => false, 'error' => $msg]);
-                exit;
-            }
-            $card_app_error = $msg;
-        } elseif ($file['size'] > 5 * 1024 * 1024) {
-            $msg = 'Image file size exceeds maximum limit of 5MB.';
-            if ($isAjax) {
-                header('Content-Type: application/json');
-                echo json_encode(['success' => false, 'error' => $msg]);
-                exit;
-            }
-            $card_app_error = $msg;
+        $tmp = $file['tmp_name'];
+        $finfo = new finfo(FILEINFO_MIME_TYPE);
+        $mime = $finfo->file($tmp);
+        $allowedMimes = ['image/jpeg', 'image/png', 'image/webp'];
+        $imageInfo = @getimagesize($tmp);
+        if ($file['size'] > 5 * 1024 * 1024 || !in_array($mime, $allowedMimes, true) || !$imageInfo || !in_array($imageInfo[2], [IMAGETYPE_JPEG, IMAGETYPE_PNG, IMAGETYPE_WEBP], true)) {
+            $msg = 'The uploaded file is not a supported image or exceeds 5MB.';
+            $respond(['success' => false, 'error' => $msg]); $card_app_error = $msg;
+        } elseif (!extension_loaded('gd') || !function_exists('imagecreatefromstring')) {
+            $msg = 'Card generation is temporarily unavailable. Please contact the event team.';
+            $respond(['success' => false, 'error' => $msg]); $card_app_error = $msg;
         } else {
-            $uploadDir = __DIR__ . '/public/images/attendee_cards/';
-            if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0777, true);
-            }
+            try {
+                $check = $db->prepare("SELECT id FROM attendee_eligibility WHERE email = ? AND status = 'verified' LIMIT 1");
+                $check->execute([$email]);
+                if (!$check->fetchColumn()) {
+                    $msg = 'We could not verify a paid registration for this email. Please contact the event administration team.';
+                    $respond(['success' => false, 'error' => $msg]); $card_app_error = $msg;
+                } else {
+                    $photo = @imagecreatefromstring(file_get_contents($tmp));
+                    $templateInclude = __DIR__ . '/includes/attendee_card_template.php';
+                    if (!$photo || !is_file($templateInclude)) throw new RuntimeException('Photo or template could not be loaded.');
+                    require $templateInclude;
+                    $templateBytes = base64_decode($attendeeCardTemplateBase64, true);
+                    $card = $templateBytes !== false ? @imagecreatefromstring($templateBytes) : false;
+                    if (!$card) throw new RuntimeException('Card template is invalid.');
 
-            $newFileName = time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
-            $destPath = $uploadDir . $newFileName;
-            $dbPath = 'public/images/attendee_cards/' . $newFileName;
+                    $photoX = 584; $photoY = 570; $photoW = 570; $photoH = 620;
+                    $srcW = imagesx($photo); $srcH = imagesy($photo);
+                    $scale = max($photoW / $srcW, $photoH / $srcH);
+                    $cropW = (int) round($photoW / $scale); $cropH = (int) round($photoH / $scale);
+                    $srcX = (int) max(0, ($srcW - $cropW) / 2); $srcY = (int) max(0, ($srcH - $cropH) / 2);
+                    $photoLayer = imagecreatetruecolor($photoW, $photoH);
+                    imagecopyresampled($photoLayer, $photo, 0, 0, $srcX, $srcY, $photoW, $photoH, $cropW, $cropH);
+                    $white = imagecolorallocate($photoLayer, 255, 255, 255);
+                    imagefilledrectangle($photoLayer, 0, 0, 34, 34, $white);
+                    imagefilledellipse($photoLayer, 0, 0, 68, 68, $white);
+                    imagefilledrectangle($photoLayer, $photoW - 34, 0, $photoW, 34, $white);
+                    imagefilledellipse($photoLayer, $photoW, 0, 68, 68, $white);
+                    imagecopy($card, $photoLayer, $photoX, $photoY, 0, 0, $photoW, $photoH);
 
-            if (move_uploaded_file($file['tmp_name'], $destPath)) {
-                try {
-                    $stmt = $db->prepare("INSERT INTO `attendee_card_requests` (`name`, `email`, `image_path`, `ip_address`, `status`) VALUES (?, ?, ?, ?, 'pending')");
-                    $stmt->execute([$name, $email, $dbPath, $ip]);
-
-                    $successMsg = 'Applied for Attendee Card, you will get your card thorugh email.';
-                    if ($isAjax) {
-                        header('Content-Type: application/json');
-                        echo json_encode([
-                            'success' => true,
-                            'message' => $successMsg
-                        ]);
-                        exit;
+                    $panelWhite = imagecolorallocate($card, 255, 255, 255);
+                    imagefilledrectangle($card, 605, 1205, 965, 1370, $panelWhite);
+                    $ink = imagecolorallocate($card, 26, 12, 62);
+                    $font = null;
+                    foreach (['/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', '/usr/share/fonts/truetype/liberation2/LiberationSans-Bold.ttf'] as $candidate) {
+                        if (is_file($candidate)) { $font = $candidate; break; }
                     }
-                    $card_app_success = $successMsg;
-                } catch (Exception $e) {
-                    $msg = 'Database error: ' . $e->getMessage();
-                    if ($isAjax) {
-                        header('Content-Type: application/json');
-                        echo json_encode(['success' => false, 'error' => $msg]);
-                        exit;
+                    $cleanName = preg_replace('/\s+/u', ' ', $name);
+                    $words = preg_split('/\s+/u', $cleanName);
+                    $lines = []; $line = '';
+                    foreach ($words as $word) {
+                        $candidate = $line === '' ? $word : $line . ' ' . $word;
+                        if ($font && $line !== '' && imagettfbbox(50, 0, $font, $candidate)[2] > 330) { $lines[] = $line; $line = $word; }
+                        else { $line = $candidate; }
                     }
-                    $card_app_error = $msg;
+                    if ($line !== '') $lines[] = $line;
+                    if (count($lines) > 2) {
+                        $splitAt = (int) ceil(count($words) / 2);
+                        $lines = [implode(' ', array_slice($words, 0, $splitAt)), implode(' ', array_slice($words, $splitAt))];
+                    }
+                    if ($font && function_exists('imagettftext')) {
+                        $fontSize = 50;
+                        foreach ($lines as $lineText) while ($fontSize > 28 && imagettfbbox($fontSize, 0, $font, $lineText)[2] > 330) $fontSize--;
+                        $baseY = count($lines) > 1 ? 1285 : 1320;
+                        foreach (array_slice($lines, 0, 2) as $i => $lineText) imagettftext($card, $fontSize, 0, 618, $baseY + ($i * 54), $ink, $font, $lineText);
+                    } else { imagestring($card, 5, 618, 1280, substr($cleanName, 0, 30), $ink); }
+
+                    $privateDir = dirname(__DIR__) . '/sbg-private/attendee_cards';
+                    if (!is_dir($privateDir) && !mkdir($privateDir, 0750, true) && !is_dir($privateDir)) throw new RuntimeException('Could not create private card storage.');
+                    $token = bin2hex(random_bytes(32));
+                    $filename = $token . '.jpg';
+                    $outputPath = $privateDir . '/' . $filename;
+                    if (!imagejpeg($card, $outputPath, 92)) throw new RuntimeException('Could not save generated attendee card.');
+                    chmod($outputPath, 0640);
+                    $_SESSION['attendee_card_token'] = $token;
+                    $_SESSION['attendee_card_file'] = $filename;
+                    imagedestroy($photo); imagedestroy($photoLayer); imagedestroy($card);
+                    $respond([
+                        'success' => true,
+                        'message' => 'Your payment is verified. Your attendee card is ready!',
+                        'preview_url' => 'attendee_card_file.php?token=' . rawurlencode($token),
+                        'download_url' => 'attendee_card_file.php?token=' . rawurlencode($token) . '&download=1'
+                    ]);
+                    $card_app_success = 'Your attendee card is ready.';
                 }
-            } else {
-                $msg = 'Failed to upload photo. Please try again.';
-                if ($isAjax) {
-                    header('Content-Type: application/json');
-                    echo json_encode(['success' => false, 'error' => $msg]);
-                    exit;
-                }
-                $card_app_error = $msg;
+            } catch (Throwable $e) {
+                error_log('Attendee card generation failed: ' . $e->getMessage());
+                $msg = 'We could not generate your card right now. Please try again later.';
+                $respond(['success' => false, 'error' => $msg]); $card_app_error = $msg;
             }
         }
     }
@@ -508,6 +526,7 @@ $stat_rows = [
                     <form id="community-day-form" method="POST" onsubmit="handleCommunityDaySignup(event)" class="space-y-4">
                         <input type="hidden" name="action" value="event_signup">
                         <input type="hidden" name="is_ajax" value="1">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['attendee_form_csrf'], ENT_QUOTES, 'UTF-8') ?>">
                         <input type="hidden" name="event_name" value="AWS Student Community Day Multan 2026">
 
                         <div>
@@ -580,7 +599,7 @@ $stat_rows = [
 
 <!-- Attendee Card Application Modal -->
 <div id="attendee-card-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md hidden opacity-0 transition-opacity duration-300" onclick="closeAttendeeCardModal()">
-    <div class="relative max-w-md w-full bg-slate-900 border-2 border-purple-500/40 rounded-3xl p-6 sm:p-8 shadow-2xl overflow-hidden" onclick="event.stopPropagation()">
+    <div class="relative max-w-3xl w-full max-h-[92vh] overflow-y-auto bg-slate-900 border-2 border-purple-500/40 rounded-3xl p-6 sm:p-8 shadow-2xl" onclick="event.stopPropagation()">
         
         <!-- Glowing ambient background -->
         <div class="pointer-events-none absolute -top-20 -right-20 w-48 h-48 rounded-full bg-purple-600/30 blur-3xl"></div>
@@ -601,12 +620,17 @@ $stat_rows = [
                     Get your Attendee Card
                 </h3>
                 <p class="text-xs text-slate-400 mt-1">
-                    Enter your name, email and upload your image to apply for your AWS Community Day Attendee Card
+                    Enter your name, verified registration email and photo. Your email must be marked as paid by the event team.
                 </p>
             </div>
 
             <!-- Feedback Alert Box -->
-            <div id="card-app-alert" class="hidden rounded-2xl p-4 text-xs font-bold leading-relaxed"></div>
+            <div id="card-app-alert" class="hidden rounded-2xl p-4 text-xs font-bold leading-relaxed" role="status" aria-live="polite"></div>
+            <div id="attendee-card-result" class="hidden space-y-3">
+                <h4 class="text-sm font-black text-white">Your generated attendee card</h4>
+                <img id="attendee-card-result-image" src="" alt="Generated attendee card preview" class="w-full max-h-[65vh] object-contain rounded-xl border border-purple-400/30 bg-black/20">
+                <a id="attendee-card-download" href="#" class="block w-full rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 px-5 py-3.5 text-center text-xs font-black uppercase tracking-widest text-white shadow-lg">Download Attendee Card</a>
+            </div>
 
             <!-- Application Form -->
             <form id="attendee-card-form" method="POST" enctype="multipart/form-data" onsubmit="handleAttendeeCardSubmit(event)" class="space-y-4">
@@ -642,7 +666,7 @@ $stat_rows = [
                 </div>
 
                 <button type="submit" id="card-app-submit-btn" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-purple-600 via-fuchsia-600 to-amber-500 hover:opacity-95 text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-purple-600/30 transition-all cursor-pointer flex items-center justify-center gap-2">
-                    <span>Apply</span>
+                    <span>Verify & Generate Card</span>
                 </button>
             </form>
 
@@ -1427,50 +1451,43 @@ function handleAttendeeCardSubmit(e) {
     const form = e.target;
     const submitBtn = document.getElementById('card-app-submit-btn');
     const alertBox = document.getElementById('card-app-alert');
-
+    const result = document.getElementById('attendee-card-result');
+    const preview = document.getElementById('attendee-card-result-image');
+    const download = document.getElementById('attendee-card-download');
+    if (result) result.classList.add('hidden');
+    if (alertBox) alertBox.classList.add('hidden');
     submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span>Submitting Application...</span>';
-
-    const formData = new FormData(form);
-
-    fetch('index.php', {
-        method: 'POST',
-        headers: { 'X-Requested-With': 'XMLHttpRequest' },
-        body: formData
-    })
-    .then(r => r.json())
+    submitBtn.innerHTML = '<span>Checking payment & generating card...</span>';
+    fetch('index.php', { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' }, body: new FormData(form) })
+    .then(response => response.json())
     .then(data => {
         submitBtn.disabled = false;
-        submitBtn.innerHTML = '<span>Apply</span>';
-
+        submitBtn.innerHTML = '<span>Verify & Generate Card</span>';
         if (data.success) {
             if (alertBox) {
-                alertBox.className = 'rounded-2xl p-4 mb-3 text-xs font-bold bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 leading-relaxed';
-                alertBox.innerHTML = '<strong>Success!</strong> ' + data.message;
+                alertBox.className = 'rounded-2xl p-4 text-xs font-bold bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 leading-relaxed';
+                alertBox.textContent = data.message;
                 alertBox.classList.remove('hidden');
             }
-            form.reset();
-            const preview = document.getElementById('card-photo-preview');
-            const placeholder = document.getElementById('card-photo-placeholder');
-            if (preview && placeholder) {
-                preview.classList.add('hidden');
-                placeholder.classList.remove('hidden');
+            if (preview && download && result) {
+                preview.src = data.preview_url + '&v=' + Date.now();
+                download.href = data.download_url;
+                result.classList.remove('hidden');
+                result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
-        } else {
-            if (alertBox) {
-                alertBox.className = 'rounded-2xl p-4 mb-3 text-xs font-bold bg-red-500/20 border border-red-500/40 text-red-300 leading-relaxed';
-                alertBox.innerHTML = data.error || 'Failed to submit application. Please try again.';
-                alertBox.classList.remove('hidden');
-            }
+        } else if (alertBox) {
+            alertBox.className = 'rounded-2xl p-4 text-xs font-bold bg-red-500/20 border border-red-500/40 text-red-300 leading-relaxed';
+            alertBox.textContent = data.error || 'We could not verify your registration.';
+            alertBox.classList.remove('hidden');
         }
     })
-    .catch(err => {
-        console.error(err);
+    .catch(error => {
+        console.error(error);
         submitBtn.disabled = false;
-        submitBtn.innerHTML = '<span>Apply</span>';
+        submitBtn.innerHTML = '<span>Verify & Generate Card</span>';
         if (alertBox) {
-            alertBox.className = 'rounded-2xl p-4 mb-3 text-xs font-bold bg-red-500/20 border border-red-500/40 text-red-300 leading-relaxed';
-            alertBox.innerHTML = 'Network error. Please try again.';
+            alertBox.className = 'rounded-2xl p-4 text-xs font-bold bg-red-500/20 border border-red-500/40 text-red-300 leading-relaxed';
+            alertBox.textContent = 'Network error. Please try again.';
             alertBox.classList.remove('hidden');
         }
     });
