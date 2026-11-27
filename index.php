@@ -617,14 +617,14 @@ $stat_rows = [
                     <label class="block text-[10px] font-black uppercase tracking-wider text-slate-300 mb-1.5">
                         Full Name
                     </label>
-                    <input type="text" name="name" id="card-app-name" required placeholder="Enter same name on meetup" class="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-xs sm:text-sm text-white placeholder-slate-400 outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-500/20 transition-all">
+                    <input type="text" name="name" id="card-app-name" required placeholder="Enter same name as meetup" class="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-xs sm:text-sm text-white placeholder-slate-400 outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-500/20 transition-all">
                 </div>
 
                 <div>
                     <label class="block text-[10px] font-black uppercase tracking-wider text-slate-300 mb-1.5">
                         Email Address
                     </label>
-                    <input type="email" name="email" id="card-app-email" required placeholder="Enter same email address on meetup" class="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-xs sm:text-sm text-white placeholder-slate-400 outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-500/20 transition-all">
+                    <input type="email" name="email" id="card-app-email" required placeholder="Enter same email address as meetup" class="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-xs sm:text-sm text-white placeholder-slate-400 outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-500/20 transition-all">
                 </div>
 
                 <div>
