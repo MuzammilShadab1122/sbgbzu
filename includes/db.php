@@ -137,6 +137,17 @@ try {
         `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB;");
 
+    // Attendee Card Requests Table (AWS Student Community Day Virtual Pass Applications)
+    $db->exec("CREATE TABLE IF NOT EXISTS `attendee_card_requests` (
+        `id` INT AUTO_INCREMENT PRIMARY KEY,
+        `name` VARCHAR(255) NOT NULL,
+        `email` VARCHAR(255) NOT NULL,
+        `image_path` VARCHAR(255) NOT NULL,
+        `status` VARCHAR(50) NOT NULL DEFAULT 'pending',
+        `ip_address` VARCHAR(100) DEFAULT NULL,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB;");
+
     // Dynamic column migrations for existing databases
     try {
         $colCheck = $db->query("SHOW COLUMNS FROM `members` LIKE 'member_code'")->rowCount();

@@ -648,6 +648,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $stmt->execute([$signup_id]);
                 $success = "Event attendee registration removed successfully.";
             }
+        } elseif ($action === 'delete_card_request') {
+            $req_id = intval($_POST['request_id'] ?? 0);
+            if ($req_id > 0) {
+                $req = $db->query("SELECT `image_path` FROM `attendee_card_requests` WHERE `id` = $req_id")->fetch();
+                if ($req && !empty($req['image_path']) && file_exists(__DIR__ . '/' . $req['image_path'])) {
+                    @unlink(__DIR__ . '/' . $req['image_path']);
+                }
+                $stmt = $db->prepare("DELETE FROM `attendee_card_requests` WHERE `id` = ?");
+                $stmt->execute([$req_id]);
+                $success = "Attendee card application removed successfully.";
+            }
         }
 
         // Refresh variables by reloading db data
@@ -665,6 +676,13 @@ try {
 } catch (Exception $e) {
 }
 $total_community_signups = 582 + count($all_event_signups);
+
+// Fetch Attendee Card Requests
+$all_card_requests = [];
+try {
+    $all_card_requests = $db->query("SELECT * FROM `attendee_card_requests` ORDER BY `id` DESC")->fetchAll();
+} catch (Exception $e) {
+}
 ?>
 
 <div class="mx-auto max-w-[1440px] px-4 sm:px-6 pb-24 pt-8 lg:px-8">
@@ -2098,6 +2116,74 @@ $total_community_signups = 582 + count($all_event_signups);
                     </table>
                 </div>
             <?php endif; ?>
+
+            <!-- Attendee Card Applications Section -->
+            <div class="mt-8 pt-8 border-t border-slate-200 dark:border-white/10">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h4 class="text-base font-black text-slate-900 dark:text-white font-space">Attendee Card Applications</h4>
+                        <p class="text-xs text-slate-500 dark:text-zinc-400">Applications submitted for custom AWS Student Community Day Virtual Pass cards.</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-[9px] font-black uppercase tracking-wider text-slate-400 block">Total Applications</span>
+                        <span class="text-xl font-black text-amber-500 dark:text-amber-400 font-space"><?= count($all_card_requests) ?></span>
+                    </div>
+                </div>
+
+                <?php if (empty($all_card_requests)): ?>
+                    <div class="p-8 text-center rounded-2xl bg-slate-50/50 dark:bg-white/[0.01] border border-dashed border-slate-200 dark:border-white/10">
+                        <p class="text-sm font-bold text-slate-700 dark:text-zinc-300">No attendee card applications received yet.</p>
+                        <p class="text-xs text-slate-400 mt-1">When users click "Get your Attendee Card" and apply, their photos and details will appear here.</p>
+                    </div>
+                <?php else: ?>
+                    <div class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-white/10">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="border-b border-slate-200 dark:border-white/10 bg-slate-50/75 dark:bg-white/[0.02] text-[10px] font-black uppercase tracking-wider text-slate-400">
+                                    <th class="py-3 px-3">#</th>
+                                    <th class="py-3 px-3">Photo</th>
+                                    <th class="py-3 px-3">Applicant Name</th>
+                                    <th class="py-3 px-3">Email Address</th>
+                                    <th class="py-3 px-3">Status</th>
+                                    <th class="py-3 px-3">Applied At</th>
+                                    <th class="py-3 px-3 text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 dark:divide-white/5">
+                                <?php foreach ($all_card_requests as $idx => $req): ?>
+                                    <tr>
+                                        <td class="py-3 px-3 font-mono text-slate-400 text-[10px]"><?= $idx + 1 ?></td>
+                                        <td class="py-3 px-3">
+                                            <a href="<?= htmlspecialchars($req['image_path']) ?>" target="_blank" title="View Full Photo" class="inline-block h-10 w-10 rounded-xl overflow-hidden border border-purple-500/30 bg-purple-950/20 hover:scale-105 transition-all">
+                                                <img src="<?= htmlspecialchars($req['image_path']) ?>" alt="<?= htmlspecialchars($req['name']) ?>" class="h-full w-full object-cover">
+                                            </a>
+                                        </td>
+                                        <td class="py-3 px-3 font-bold text-slate-900 dark:text-white"><?= htmlspecialchars($req['name']) ?></td>
+                                        <td class="py-3 px-3 font-mono text-[11px] text-purple-600 dark:text-purple-400"><?= htmlspecialchars($req['email']) ?></td>
+                                        <td class="py-3 px-3">
+                                            <span class="inline-block rounded-full bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-amber-500">
+                                                <?= htmlspecialchars($req['status'] ?? 'pending') ?>
+                                            </span>
+                                        </td>
+                                        <td class="py-3 px-3 text-slate-400 text-[10px]">
+                                            <?= date('M d, Y - h:i A', strtotime($req['created_at'])) ?>
+                                        </td>
+                                        <td class="py-3 px-3 text-right">
+                                            <form method="POST" onsubmit="return confirm('Remove this attendee card application and delete their uploaded photo?');" class="inline">
+                                                <input type="hidden" name="action" value="delete_card_request">
+                                                <input type="hidden" name="request_id" value="<?= (int) $req['id'] ?>">
+                                                <button type="submit" class="rounded-full bg-red-500/10 border border-red-500/20 px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-red-500 hover:bg-red-500/20 transition-all cursor-pointer">
+                                                    Delete
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php endif; ?>
+            </div>
 
         </div>
     </div>

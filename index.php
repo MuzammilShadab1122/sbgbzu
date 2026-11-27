@@ -64,6 +64,109 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 }
 
+// Handle Attendee Card Application Submission
+$card_app_error = '';
+$card_app_success = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'apply_attendee_card') {
+    $name = trim($_POST['name'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+
+    $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') || isset($_POST['is_ajax']);
+
+    if (empty($name) || empty($email)) {
+        $msg = 'Please enter your Full Name and Email Address.';
+        if ($isAjax) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'error' => $msg]);
+            exit;
+        }
+        $card_app_error = $msg;
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $msg = 'Please enter a valid email address.';
+        if ($isAjax) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'error' => $msg]);
+            exit;
+        }
+        $card_app_error = $msg;
+    } elseif (!isset($_FILES['image']) || $_FILES['image']['error'] !== UPLOAD_ERR_OK) {
+        $msg = 'Please upload a photo for your attendee card.';
+        if ($isAjax) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'error' => $msg]);
+            exit;
+        }
+        $card_app_error = $msg;
+    } else {
+        $file = $_FILES['image'];
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        $allowedExts = ['jpg', 'jpeg', 'png', 'webp'];
+
+        if (!in_array($ext, $allowedExts)) {
+            $msg = 'Invalid image format. Allowed formats: JPG, JPEG, PNG, WEBP.';
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'error' => $msg]);
+                exit;
+            }
+            $card_app_error = $msg;
+        } elseif ($file['size'] > 5 * 1024 * 1024) {
+            $msg = 'Image file size exceeds maximum limit of 5MB.';
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'error' => $msg]);
+                exit;
+            }
+            $card_app_error = $msg;
+        } else {
+            $uploadDir = __DIR__ . '/public/images/attendee_cards/';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0777, true);
+            }
+
+            $newFileName = time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
+            $destPath = $uploadDir . $newFileName;
+            $dbPath = 'public/images/attendee_cards/' . $newFileName;
+
+            if (move_uploaded_file($file['tmp_name'], $destPath)) {
+                try {
+                    $stmt = $db->prepare("INSERT INTO `attendee_card_requests` (`name`, `email`, `image_path`, `ip_address`, `status`) VALUES (?, ?, ?, ?, 'pending')");
+                    $stmt->execute([$name, $email, $dbPath, $ip]);
+
+                    $successMsg = 'Applied for Attendee Card, you will get your card thorugh email.';
+                    if ($isAjax) {
+                        header('Content-Type: application/json');
+                        echo json_encode([
+                            'success' => true,
+                            'message' => $successMsg
+                        ]);
+                        exit;
+                    }
+                    $card_app_success = $successMsg;
+                } catch (Exception $e) {
+                    $msg = 'Database error: ' . $e->getMessage();
+                    if ($isAjax) {
+                        header('Content-Type: application/json');
+                        echo json_encode(['success' => false, 'error' => $msg]);
+                        exit;
+                    }
+                    $card_app_error = $msg;
+                }
+            } else {
+                $msg = 'Failed to upload photo. Please try again.';
+                if ($isAjax) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => false, 'error' => $msg]);
+                    exit;
+                }
+                $card_app_error = $msg;
+            }
+        }
+    }
+}
+
 // Fetch current count for Community Day (Base: 582)
 $dbSignups = 0;
 try {
@@ -379,21 +482,15 @@ $stat_rows = [
             <div class="lg:col-span-5">
                 <div id="signup-card" class="rounded-3xl border-2 border-purple-500/30 bg-slate-900/95 dark:bg-[#0e0821]/95 backdrop-blur-2xl p-6 sm:p-8 shadow-2xl relative transition-all duration-300">
                     
-                    <!-- Live Registration Counter Badge (582 + increments) -->
-                    <div class="flex items-center justify-between pb-4 border-b border-white/10 mb-5">
-                        <div>
-                            <span class="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Total Live Pre-Registrations</span>
-                            <div class="flex items-baseline gap-2 mt-0.5">
-                                <span id="live-reg-count" class="text-3xl sm:text-4xl font-black font-space text-amber-400 transition-all duration-300">
-                                    <?= $communityDayCount ?>
-                                </span>
-                                <span class="text-xs font-bold uppercase tracking-wider text-slate-300">Pre-Registration</span>
-                            </div>
+                    <!-- Seat Availability Progress Bar (Matches Image 1) -->
+                    <div class="pb-5 border-b border-white/10 mb-5">
+                        <div class="flex items-center justify-between text-[11px] sm:text-xs font-black uppercase tracking-wider mb-2.5">
+                            <span class="text-slate-400 tracking-[0.16em]">Seat Availability</span>
+                            <span class="text-amber-400 font-space tracking-wide">Filling Fast (<span id="live-reg-count"><?= $communityDayCount ?></span>+ Registered)</span>
                         </div>
-                        <span class="rounded-full bg-emerald-500/15 border border-emerald-500/30 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-emerald-400 flex items-center gap-1.5 animate-pulse">
-                            <span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
-                            Live Counter
-                        </span>
+                        <div class="w-full h-2 sm:h-2.5 rounded-full bg-slate-800/90 dark:bg-white/10 overflow-hidden p-0.5 shadow-inner">
+                            <div id="seat-progress-bar" class="h-full rounded-full bg-gradient-to-r from-purple-600 via-pink-500 to-amber-500 transition-all duration-700" style="width: <?= min(96, max(20, round(($communityDayCount / 650) * 100))) ?>%;"></div>
+                        </div>
                     </div>
 
                     <!-- Form Header -->
@@ -456,6 +553,14 @@ $stat_rows = [
                             <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Meetup Link:</span>
                             <a href="https://meetu.ps/e/QljqK/1fyQWj/i" id="meetup-url-display" class="text-[11px] font-mono text-purple-300 hover:text-amber-300 underline break-all transition-colors" onclick="return handleRawLinkClick(event)">https://meetu.ps/e/QljqK/1fyQWj/i</a>
                         </div>
+
+                        <!-- Get your Attendee Card Action -->
+                        <div class="pt-2 border-t border-white/10">
+                            <button type="button" onclick="openAttendeeCardModal()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-purple-600/30 transition-all cursor-pointer flex items-center justify-center gap-2 border border-purple-400/30 hover:scale-[1.01]">
+                                <svg class="w-4 h-4 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5zm6-10.125a1.875 1.875 0 11-3.75 0 1.875 1.875 0 013.75 0zm1.294 6.336a6.721 6.721 0 01-3.169.789 6.721 6.721 0 01-3.168-.789 3.376 3.376 0 016.337 0z"/></svg>
+                                <span>Get your Attendee Card</span>
+                            </button>
+                        </div>
                     </div>
 
                 </div>
@@ -470,6 +575,79 @@ $stat_rows = [
     <div class="relative max-w-lg w-full bg-slate-900 rounded-3xl overflow-hidden border border-purple-500/40 shadow-2xl" onclick="event.stopPropagation()">
         <button onclick="closeCommunityPosterModal()" class="absolute top-3 right-3 h-8 w-8 rounded-full bg-black/60 text-white font-bold flex items-center justify-center hover:bg-black/90 border border-white/20 z-10 cursor-pointer">✕</button>
         <img src="public/images/community_day_2026.jpg" alt="AWS Student Community Day Multan 2026 Full Poster" class="w-full h-auto object-contain max-h-[85vh]">
+    </div>
+</div>
+
+<!-- Attendee Card Application Modal -->
+<div id="attendee-card-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md hidden opacity-0 transition-opacity duration-300" onclick="closeAttendeeCardModal()">
+    <div class="relative max-w-md w-full bg-slate-900 border-2 border-purple-500/40 rounded-3xl p-6 sm:p-8 shadow-2xl overflow-hidden" onclick="event.stopPropagation()">
+        
+        <!-- Glowing ambient background -->
+        <div class="pointer-events-none absolute -top-20 -right-20 w-48 h-48 rounded-full bg-purple-600/30 blur-3xl"></div>
+        <div class="pointer-events-none absolute -bottom-20 -left-20 w-48 h-48 rounded-full bg-amber-500/20 blur-3xl"></div>
+
+        <!-- Close Button -->
+        <button type="button" onclick="closeAttendeeCardModal()" class="absolute top-4 right-4 h-8 w-8 rounded-full bg-white/10 text-white font-bold flex items-center justify-center hover:bg-white/20 border border-white/20 z-10 cursor-pointer transition-all">✕</button>
+
+        <div class="relative z-10 space-y-4">
+            
+            <!-- Modal Header -->
+            <div class="border-b border-white/10 pb-4">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-300 text-[9px] font-black uppercase tracking-widest mb-1.5">
+                    <span class="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                    Attendee Card
+                </span>
+                <h3 class="text-xl sm:text-2xl font-black text-white font-space">
+                    Get your Attendee Card
+                </h3>
+                <p class="text-xs text-slate-400 mt-1">
+                    Enter your name, email and upload your image to apply for your AWS Community Day Attendee Card
+                </p>
+            </div>
+
+            <!-- Feedback Alert Box -->
+            <div id="card-app-alert" class="hidden rounded-2xl p-4 text-xs font-bold leading-relaxed"></div>
+
+            <!-- Application Form -->
+            <form id="attendee-card-form" method="POST" enctype="multipart/form-data" onsubmit="handleAttendeeCardSubmit(event)" class="space-y-4">
+                <input type="hidden" name="action" value="apply_attendee_card">
+                <input type="hidden" name="is_ajax" value="1">
+
+                <div>
+                    <label class="block text-[10px] font-black uppercase tracking-wider text-slate-300 mb-1.5">
+                        Full Name
+                    </label>
+                    <input type="text" name="name" id="card-app-name" required placeholder="Enter same name on meetup" class="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-xs sm:text-sm text-white placeholder-slate-400 outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-500/20 transition-all">
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-black uppercase tracking-wider text-slate-300 mb-1.5">
+                        Email Address
+                    </label>
+                    <input type="email" name="email" id="card-app-email" required placeholder="Enter same email address on meetup" class="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-xs sm:text-sm text-white placeholder-slate-400 outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-500/20 transition-all">
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-black uppercase tracking-wider text-slate-300 mb-1.5">
+                        Your Photo / Image
+                    </label>
+                    <div class="flex items-center gap-3">
+                        <div id="card-photo-preview-wrap" class="h-12 w-12 rounded-xl border border-white/20 bg-black/40 overflow-hidden shrink-0 flex items-center justify-center">
+                            <img id="card-photo-preview" src="" class="hidden h-full w-full object-cover">
+                            <span id="card-photo-placeholder" class="text-[10px] text-slate-500">Photo</span>
+                        </div>
+                        <input type="file" name="image" id="card-app-photo" required accept="image/png,image/jpeg,image/webp" onchange="previewCardPhoto(event)" class="w-full text-xs text-slate-400 file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-purple-600 file:text-white hover:file:bg-purple-500 cursor-pointer">
+                    </div>
+                    <span class="block text-[9px] text-slate-400 mt-1">Accepts PNG, JPG, JPEG, WEBP (Max 5MB).</span>
+                </div>
+
+                <button type="submit" id="card-app-submit-btn" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-purple-600 via-fuchsia-600 to-amber-500 hover:opacity-95 text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-purple-600/30 transition-all cursor-pointer flex items-center justify-center gap-2">
+                    <span>Apply</span>
+                </button>
+            </form>
+
+        </div>
+
     </div>
 </div>
 
@@ -1151,6 +1329,11 @@ function handleCommunityDaySignup(e) {
                 countEl.classList.add('text-emerald-400', 'scale-125');
                 setTimeout(() => countEl.classList.remove('scale-125'), 600);
             }
+            const progressBar = document.getElementById('seat-progress-bar');
+            if (progressBar && data.total_count) {
+                const pct = Math.min(96, Math.max(20, Math.round((data.total_count / 650) * 100)));
+                progressBar.style.width = pct + '%';
+            }
 
             if (alertBox) {
                 alertBox.className = 'rounded-2xl p-3.5 mb-4 text-xs font-bold bg-emerald-500/20 border border-emerald-500/40 text-emerald-300';
@@ -1202,8 +1385,96 @@ function closeCommunityPosterModal() {
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closeCommunityPosterModal();
+        closeAttendeeCardModal();
     }
 });
+
+function openAttendeeCardModal() {
+    const modal = document.getElementById('attendee-card-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        setTimeout(() => modal.classList.remove('opacity-0'), 10);
+    }
+}
+
+function closeAttendeeCardModal() {
+    const modal = document.getElementById('attendee-card-modal');
+    if (modal) {
+        modal.classList.add('opacity-0');
+        setTimeout(() => modal.classList.add('hidden'), 300);
+    }
+}
+
+function previewCardPhoto(e) {
+    const file = e.target.files[0];
+    const preview = document.getElementById('card-photo-preview');
+    const placeholder = document.getElementById('card-photo-placeholder');
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            if (preview && placeholder) {
+                preview.src = evt.target.result;
+                preview.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function handleAttendeeCardSubmit(e) {
+    e.preventDefault();
+    const form = e.target;
+    const submitBtn = document.getElementById('card-app-submit-btn');
+    const alertBox = document.getElementById('card-app-alert');
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span>Submitting Application...</span>';
+
+    const formData = new FormData(form);
+
+    fetch('index.php', {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span>Apply</span>';
+
+        if (data.success) {
+            if (alertBox) {
+                alertBox.className = 'rounded-2xl p-4 mb-3 text-xs font-bold bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 leading-relaxed';
+                alertBox.innerHTML = '<strong>Success!</strong> ' + data.message;
+                alertBox.classList.remove('hidden');
+            }
+            form.reset();
+            const preview = document.getElementById('card-photo-preview');
+            const placeholder = document.getElementById('card-photo-placeholder');
+            if (preview && placeholder) {
+                preview.classList.add('hidden');
+                placeholder.classList.remove('hidden');
+            }
+        } else {
+            if (alertBox) {
+                alertBox.className = 'rounded-2xl p-4 mb-3 text-xs font-bold bg-red-500/20 border border-red-500/40 text-red-300 leading-relaxed';
+                alertBox.innerHTML = data.error || 'Failed to submit application. Please try again.';
+                alertBox.classList.remove('hidden');
+            }
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span>Apply</span>';
+        if (alertBox) {
+            alertBox.className = 'rounded-2xl p-4 mb-3 text-xs font-bold bg-red-500/20 border border-red-500/40 text-red-300 leading-relaxed';
+            alertBox.innerHTML = 'Network error. Please try again.';
+            alertBox.classList.remove('hidden');
+        }
+    });
+}
 
 document.addEventListener('DOMContentLoaded', updateCommunityDayUIState);
 </script>
