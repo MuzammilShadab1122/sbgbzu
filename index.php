@@ -192,7 +192,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'apply
                     $token = bin2hex(random_bytes(32));
                     $filename = $token . '.jpg';
                     $outputPath = $privateDir . '/' . $filename;
-                    if (!imagejpeg($card, $outputPath, 92)) throw new RuntimeException('Could not save generated attendee card.');
+                    if (!imagejpeg($card, $outputPath, 82)) throw new RuntimeException('Could not save generated attendee card.');
                     chmod($outputPath, 0640);
                     $_SESSION['attendee_card_token'] = $token;
                     $_SESSION['attendee_card_file'] = $filename;
