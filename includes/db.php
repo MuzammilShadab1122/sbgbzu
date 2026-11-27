@@ -72,8 +72,15 @@ try {
             `id` INT AUTO_INCREMENT PRIMARY KEY,
             `name` VARCHAR(255) NOT NULL,
             `designation` VARCHAR(255) NOT NULL,
+            `company` VARCHAR(255) NOT NULL DEFAULT '',
             `photo` VARCHAR(255) NOT NULL
         ) ENGINE=InnoDB;");
+    }
+
+    // Add company to existing meetup guest records without changing existing data
+    $guestCompanyColumn = $db->query("SHOW COLUMNS FROM `meetup_guests` LIKE 'company'")->fetch();
+    if (!$guestCompanyColumn) {
+        $db->exec("ALTER TABLE `meetup_guests` ADD COLUMN `company` VARCHAR(255) NOT NULL DEFAULT '' AFTER `designation`");
     }
 
     // Check if swags table exists, if not, create and seed default AWS Swags
