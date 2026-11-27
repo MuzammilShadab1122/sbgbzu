@@ -137,6 +137,18 @@ try {
         `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB;");
 
+    // Verified attendee eligibility for automatic attendee card generation.
+    $db->exec("CREATE TABLE IF NOT EXISTS `attendee_eligibility` (
+        `id` INT AUTO_INCREMENT PRIMARY KEY,
+        `email` VARCHAR(254) NOT NULL,
+        `status` ENUM('verified', 'unverified') NOT NULL DEFAULT 'unverified',
+        `verified_at` TIMESTAMP NULL DEFAULT NULL,
+        `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY `uq_attendee_eligibility_email` (`email`),
+        KEY `idx_attendee_eligibility_status` (`status`)
+    ) ENGINE=InnoDB;");
+
     // Attendee Card Requests Table (AWS Student Community Day Virtual Pass Applications)
     $db->exec("CREATE TABLE IF NOT EXISTS `attendee_card_requests` (
         `id` INT AUTO_INCREMENT PRIMARY KEY,
