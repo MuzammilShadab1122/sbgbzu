@@ -230,9 +230,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'apply
                     if (!is_file($qrPath)) throw new RuntimeException('The homepage QR code asset is missing.');
                     $qrImage = @imagecreatefrompng($qrPath);
                     if (!$qrImage) throw new RuntimeException('The homepage QR code image is invalid.');
-                    // Nearest-neighbour scaling keeps QR module edges crisp; PNG output preserves them losslessly.
-                    // Keep the printed 'Get Yours!' caption below the QR clear; fit QR inside its reserved square.
-                    imagecopyresized($card, $qrImage, 670, 675, 0, 0, 68, 68, imagesx($qrImage), imagesy($qrImage));
+                    // The template already contains a printed sample QR. Clear that entire QR area first,
+                    // otherwise its lower portion remains visible beneath the generated attendee QR.
+                    $qrWhite = imagecolorallocate($card, 255, 255, 255);
+                    imagefilledrectangle($card, 665, 689, 742, 756, $qrWhite);
+
+                    // Draw exactly one crisp QR inside the template's QR square.
+                    // Keep the original "Get Yours!" caption below it untouched.
+                    imagecopyresized($card, $qrImage, 672, 694, 0, 0, 62, 62, imagesx($qrImage), imagesy($qrImage));
                     imagedestroy($qrImage);
 
                     $privateDir = dirname(__DIR__) . '/sbg-private/attendee_cards';
