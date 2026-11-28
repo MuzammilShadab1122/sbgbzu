@@ -133,21 +133,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'apply
                     $card = @imagecreatefromjpeg($templatePath);
                     if (!$card) throw new RuntimeException('Card template is invalid.');
 
-                    // Shift the complete card artwork down slightly to reduce the empty gap below.
-                    // Extend the canvas so the bottom footer remains fully visible.
-                    $cardWidth = imagesx($card);
-                    $cardHeight = imagesy($card);
-                    $verticalShift = 30;
-                    $shiftedCard = imagecreatetruecolor($cardWidth, $cardHeight + $verticalShift);
-                    $topColor = imagecolorat($card, 0, 0);
-                    imagefilledrectangle($shiftedCard, 0, 0, $cardWidth - 1, $verticalShift - 1, $topColor);
-                    imagecopy($shiftedCard, $card, 0, $verticalShift, 0, 0, $cardWidth, $cardHeight);
-                    imagedestroy($card);
-                    $card = $shiftedCard;
 
                     // Fit the uploaded portrait inside the upper photo window.
                     // Extend the photo to meet the lower name/QR panel with no visible gap.
-                    $photoX = 439; $photoY = 457; $photoW = 429; $photoH = 499;
+                    $photoX = 439; $photoY = 427; $photoW = 429; $photoH = 499;
                     $srcW = imagesx($photo); $srcH = imagesy($photo);
                     $scale = max($photoW / $srcW, $photoH / $srcH);
                     $cropW = (int) round($photoW / $scale); $cropH = (int) round($photoH / $scale);
@@ -190,7 +179,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'apply
                     // Replace the website URL with the attendee name in the left panel beside the QR code.
                     // Keep the QR code and its vertical divider clear.
                     $namePanelWhite = imagecolorallocate($card, 255, 255, 255);
-                    imagefilledrectangle($card, 455, 957, 729, 1067, $namePanelWhite);
+                    imagefilledrectangle($card, 455, 927, 729, 1037, $namePanelWhite);
 
                     $ink = imagecolorallocate($card, 55, 0, 125);
                     $font = null;
@@ -209,7 +198,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'apply
                         }
                         if (($box[2] - $box[0]) <= $maxTextWidth) {
                             $textX = (int) round(592 - (($box[2] + $box[0]) / 2));
-                            imagettftext($card, $fontSize, 0, $textX, 1020, $ink, $font, $cleanName);
+                            imagettftext($card, $fontSize, 0, $textX, 990, $ink, $font, $cleanName);
                         } else {
                             $words = preg_split('/\\s+/u', $cleanName);
                             $lines = []; $line = '';
@@ -227,11 +216,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'apply
                             foreach (array_slice($lines, 0, 3) as $i => $lineText) {
                                 $lineBox = imagettfbbox(18, 0, $font, $lineText);
                                 $textX = (int) round(592 - (($lineBox[2] + $lineBox[0]) / 2));
-                                imagettftext($card, 18, 0, $textX, 987 + ($i * 25), $ink, $font, $lineText);
+                                imagettftext($card, 18, 0, $textX, 957 + ($i * 25), $ink, $font, $lineText);
                             }
                         }
                     } else {
-                        imagestring($card, 4, 502, 1003, substr($cleanName, 0, 30), $ink);
+                        imagestring($card, 4, 502, 973, substr($cleanName, 0, 30), $ink);
                     }
 
                     // Add a fresh QR code whose payload is always the SBGZU homepage.
@@ -239,7 +228,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'apply
                     if (!is_file($qrPath)) throw new RuntimeException('The homepage QR code asset is missing.');
                     $qrImage = @imagecreatefrompng($qrPath);
                     if (!$qrImage) throw new RuntimeException('The homepage QR code image is invalid.');
-                    imagecopyresampled($card, $qrImage, 770, 941, 0, 0, 79, 79, imagesx($qrImage), imagesy($qrImage));
+                    imagecopyresampled($card, $qrImage, 770, 911, 0, 0, 79, 79, imagesx($qrImage), imagesy($qrImage));
                     imagedestroy($qrImage);
 
                     $privateDir = dirname(__DIR__) . '/sbg-private/attendee_cards';
