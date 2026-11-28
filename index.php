@@ -136,7 +136,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'apply
 
                     // Fit the uploaded portrait inside the upper photo window.
                     // Extend the photo to meet the lower name/QR panel with no visible gap.
-                    $photoX = 439; $photoY = 427; $photoW = 429; $photoH = 499;
+                    // Coordinates are for the current 1080x1170 card template.
+                    // Place the attendee photo only inside the purple front-card photo window.
+                    $photoX = 382; $photoY = 345; $photoW = 379; $photoH = 322;
                     $srcW = imagesx($photo); $srcH = imagesy($photo);
                     $scale = max($photoW / $srcW, $photoH / $srcH);
                     $cropW = (int) round($photoW / $scale); $cropH = (int) round($photoH / $scale);
@@ -145,7 +147,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'apply
                     imagecopyresampled($photoLayer, $photo, 0, 0, $srcX, $srcY, $photoW, $photoH, $cropW, $cropH);
                     // Make the photo layer transparent outside rounded top corners.
                     // This reveals the original card template beneath the photo (not white patches).
-                    $cornerRadius = 35;
+                    $cornerRadius = 34;
                     $transparent = imagecolorallocatealpha($photoLayer, 0, 0, 0, 127);
                     imagealphablending($photoLayer, false);
                     imagesavealpha($photoLayer, true);
@@ -179,7 +181,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'apply
                     // Replace the website URL with the attendee name in the left panel beside the QR code.
                     // Keep the QR code and its vertical divider clear.
                     $namePanelWhite = imagecolorallocate($card, 255, 255, 255);
-                    imagefilledrectangle($card, 455, 927, 729, 1037, $namePanelWhite);
+                    imagefilledrectangle($card, 382, 668, 635, 795, $namePanelWhite);
 
                     $ink = imagecolorallocate($card, 55, 0, 125);
                     $font = null;
@@ -190,15 +192,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'apply
 
                     if ($font && function_exists('imagettftext')) {
                         $fontSize = 28;
-                        $maxTextWidth = 251;
+                        $maxTextWidth = 228;
                         $box = imagettfbbox($fontSize, 0, $font, $cleanName);
                         while ($fontSize > 14 && ($box[2] - $box[0]) > $maxTextWidth) {
                             $fontSize--;
                             $box = imagettfbbox($fontSize, 0, $font, $cleanName);
                         }
                         if (($box[2] - $box[0]) <= $maxTextWidth) {
-                            $textX = (int) round(592 - (($box[2] + $box[0]) / 2));
-                            imagettftext($card, $fontSize, 0, $textX, 990, $ink, $font, $cleanName);
+                            $textX = (int) round(508 - (($box[2] + $box[0]) / 2));
+                            imagettftext($card, $fontSize, 0, $textX, 758, $ink, $font, $cleanName);
                         } else {
                             $words = preg_split('/\\s+/u', $cleanName);
                             $lines = []; $line = '';
@@ -216,11 +218,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'apply
                             foreach (array_slice($lines, 0, 3) as $i => $lineText) {
                                 $lineBox = imagettfbbox(18, 0, $font, $lineText);
                                 $textX = (int) round(592 - (($lineBox[2] + $lineBox[0]) / 2));
-                                imagettftext($card, 18, 0, $textX, 957 + ($i * 25), $ink, $font, $lineText);
+                                imagettftext($card, 18, 0, $textX, 724 + ($i * 25), $ink, $font, $lineText);
                             }
                         }
                     } else {
-                        imagestring($card, 4, 502, 973, substr($cleanName, 0, 30), $ink);
+                        imagestring($card, 4, 420, 758, substr($cleanName, 0, 30), $ink);
                     }
 
                     // Add a fresh QR code whose payload is always the SBGZU homepage.
@@ -228,7 +230,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'apply
                     if (!is_file($qrPath)) throw new RuntimeException('The homepage QR code asset is missing.');
                     $qrImage = @imagecreatefrompng($qrPath);
                     if (!$qrImage) throw new RuntimeException('The homepage QR code image is invalid.');
-                    imagecopyresampled($card, $qrImage, 770, 911, 0, 0, 79, 79, imagesx($qrImage), imagesy($qrImage));
+                    imagecopyresampled($card, $qrImage, 670, 694, 0, 0, 68, 68, imagesx($qrImage), imagesy($qrImage));
                     imagedestroy($qrImage);
 
                     $privateDir = dirname(__DIR__) . '/sbg-private/attendee_cards';
