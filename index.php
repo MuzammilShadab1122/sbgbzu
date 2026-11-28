@@ -217,7 +217,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'apply
                             if ($line !== '') $lines[] = $line;
                             foreach (array_slice($lines, 0, 3) as $i => $lineText) {
                                 $lineBox = imagettfbbox(18, 0, $font, $lineText);
-                                $textX = (int) round(592 - (($lineBox[2] + $lineBox[0]) / 2));
+                                $textX = (int) round(508 - (($lineBox[2] + $lineBox[0]) / 2));
                                 imagettftext($card, 18, 0, $textX, 724 + ($i * 25), $ink, $font, $lineText);
                             }
                         }
