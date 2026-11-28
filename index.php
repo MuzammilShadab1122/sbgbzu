@@ -234,7 +234,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'apply
                     // otherwise its lower portion remains visible beneath the generated attendee QR.
                     $qrWhite = imagecolorallocate($card, 255, 255, 255);
                     // Erase only the original QR artwork; stop above the printed caption.
-                    imagefilledrectangle($card, 662, 680, 746, 738, $qrWhite);
+                    // Clear the full printed sample QR, including its lower modules, while stopping above the caption.
+                    imagefilledrectangle($card, 662, 680, 746, 752, $qrWhite);
 
                     // Draw exactly one crisp QR inside the template's QR square.
                     // Keep the original "Get Yours!" caption below it untouched.
