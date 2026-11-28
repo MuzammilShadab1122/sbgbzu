@@ -230,15 +230,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'apply
                     if (!is_file($qrPath)) throw new RuntimeException('The homepage QR code asset is missing.');
                     $qrImage = @imagecreatefrompng($qrPath);
                     if (!$qrImage) throw new RuntimeException('The homepage QR code image is invalid.');
-                    imagecopyresampled($card, $qrImage, 670, 694, 0, 0, 68, 68, imagesx($qrImage), imagesy($qrImage));
+                    // Nearest-neighbour scaling keeps QR module edges crisp; PNG output preserves them losslessly.
+                    imagecopyresized($card, $qrImage, 664, 686, 0, 0, 80, 80, imagesx($qrImage), imagesy($qrImage));
                     imagedestroy($qrImage);
 
                     $privateDir = dirname(__DIR__) . '/sbg-private/attendee_cards';
                     if (!is_dir($privateDir) && !mkdir($privateDir, 0750, true) && !is_dir($privateDir)) throw new RuntimeException('Could not create private card storage.');
                     $token = bin2hex(random_bytes(32));
-                    $filename = $token . '.jpg';
+                    $filename = $token . '.png';
                     $outputPath = $privateDir . '/' . $filename;
-                    if (!imagejpeg($card, $outputPath, 82)) throw new RuntimeException('Could not save generated attendee card.');
+                    // Lossless PNG avoids JPEG artifacts around text, photo edges, and QR modules.
+                    // Compression level 1 is lossless and keeps generation fast.
+                    if (!imagepng($card, $outputPath, 1, PNG_ALL_FILTERS)) throw new RuntimeException('Could not save generated attendee card.');
                     chmod($outputPath, 0640);
                     $_SESSION['attendee_card_token'] = $token;
                     $_SESSION['attendee_card_file'] = $filename;
