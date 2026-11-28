@@ -231,7 +231,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'apply
                     $qrImage = @imagecreatefrompng($qrPath);
                     if (!$qrImage) throw new RuntimeException('The homepage QR code image is invalid.');
                     // Nearest-neighbour scaling keeps QR module edges crisp; PNG output preserves them losslessly.
-                    imagecopyresized($card, $qrImage, 664, 686, 0, 0, 80, 80, imagesx($qrImage), imagesy($qrImage));
+                    // Keep the printed 'Get Yours!' caption below the QR clear; fit QR inside its reserved square.
+                    imagecopyresized($card, $qrImage, 670, 675, 0, 0, 68, 68, imagesx($qrImage), imagesy($qrImage));
                     imagedestroy($qrImage);
 
                     $privateDir = dirname(__DIR__) . '/sbg-private/attendee_cards';
