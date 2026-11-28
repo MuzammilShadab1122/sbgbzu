@@ -138,7 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'apply
                     // Extend the photo to meet the lower name/QR panel with no visible gap.
                     // Coordinates are for the current 1080x1170 card template.
                     // Place the attendee photo only inside the purple front-card photo window.
-                    $photoX = 382; $photoY = 345; $photoW = 379; $photoH = 322;
+                    $photoX = 382; $photoY = 325; $photoW = 379; $photoH = 342;
                     $srcW = imagesx($photo); $srcH = imagesy($photo);
                     $scale = max($photoW / $srcW, $photoH / $srcH);
                     $cropW = (int) round($photoW / $scale); $cropH = (int) round($photoH / $scale);
