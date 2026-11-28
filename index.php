@@ -233,11 +233,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'apply
                     // The template already contains a printed sample QR. Clear that entire QR area first,
                     // otherwise its lower portion remains visible beneath the generated attendee QR.
                     $qrWhite = imagecolorallocate($card, 255, 255, 255);
-                    imagefilledrectangle($card, 662, 680, 746, 762, $qrWhite);
+                    imagefilledrectangle($card, 662, 680, 746, 751, $qrWhite);
 
                     // Draw exactly one crisp QR inside the template's QR square.
                     // Keep the original "Get Yours!" caption below it untouched.
-                    imagecopyresized($card, $qrImage, 672, 694, 0, 0, 62, 62, imagesx($qrImage), imagesy($qrImage));
+                    // Keep a clear gap above the original caption so 'Get Yours!' remains fully visible.
+                    imagecopyresized($card, $qrImage, 675, 686, 0, 0, 56, 56, imagesx($qrImage), imagesy($qrImage));
                     imagedestroy($qrImage);
 
                     $privateDir = dirname(__DIR__) . '/sbg-private/attendee_cards';
